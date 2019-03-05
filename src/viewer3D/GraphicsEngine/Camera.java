@@ -60,7 +60,7 @@ public class Camera {
          
         
         // Speed
-        translationScalar = 1;
+        translationScalar = 4;
 
         // Starting position
         int initialCameraPositionX = 0;
@@ -189,22 +189,22 @@ public class Camera {
         double zr = cameraRotationVector.getComponent(2)*translationScalar;
         switch(direction) {
             case FORWARD:
-                cameraPositionVector = new Vector(new double[]{x + -1*xr, y + yr, z + zr});
-                //cameraPositionVector = cameraPositionVector.add(cameraRotationVector.multiply(-translationScalar));
+                cameraPositionVector = new Vector(new double[]{x + -xr, y + yr, z + zr});
+                //cameraPositionVector = cameraPositionVector.add(cameraRotationVector.multiply(translationScalar));
                 break;
             case BACKWARD:
-                //cameraPositionVector = new Vector(new double[]{x + xr, y + -1*yr, z + -zr});
-                cameraPositionVector = cameraPositionVector.add(cameraRotationVector.multiply(translationScalar));
+                cameraPositionVector = new Vector(new double[]{x + xr, y + -yr, z + -zr});
+                //cameraPositionVector = cameraPositionVector.add(cameraRotationVector.multiply(-translationScalar));
                 break;
             case LEFT:
-                //cameraPositionVector = new Vector(new double[]{x + -zr, y + -1*yr, z + -xr});
-                Vector translationLeftVector = cameraRotationVector.cross(cameraPlaneNormalVector);
-                cameraPositionVector = cameraPositionVector.add(translationLeftVector.multiply(translationScalar));
+                cameraPositionVector = new Vector(new double[]{x + -zr, y, z + -xr});
+                //Vector translationLeftVector = cameraRotationVector.cross(cameraPlaneNormalVector);
+                //cameraPositionVector = cameraPositionVector.add(translationLeftVector.multiply(translationScalar));
                 break;
             case RIGHT:
-                //cameraPositionVector = new Vector(new double[]{x + zr, y + -1*yr, z + xr});
-                Vector translationRightVector = cameraPlaneNormalVector.cross(cameraRotationVector);
-                cameraPositionVector = cameraPositionVector.add(translationRightVector.multiply(translationScalar));
+                cameraPositionVector = new Vector(new double[]{x + zr, y, z + xr});
+                //Vector translationRightVector = cameraPlaneNormalVector.cross(cameraRotationVector);
+                //cameraPositionVector = cameraPositionVector.add(translationRightVector.multiply(translationScalar));
                 break;
             case UP:
                 cameraPositionVector = cameraPositionVector.add(cameraPlaneNormalVector.multiply(translationScalar));
@@ -261,9 +261,10 @@ public class Camera {
         phi = (phi < 0)? 360+phi : phi;
 
         // Apply rotations to camera direction
-        pitchMatrix = Matrix.get3DXRotationMatrix(Math.toRadians(phi));
         yawMatrix = Matrix.get3DYRotationMatrix(Math.toRadians(theta));
-        cameraRotationVector = (((zUnitVector.multiply(yawMatrix)).multiply(pitchMatrix)).getUnitVector());
+        pitchMatrix = Matrix.get3DXRotationMatrix(Math.toRadians(phi));
+        cameraRotationVector = (((normalVector.multiply(pitchMatrix)).getUnitVector()).multiply(yawMatrix)).getUnitVector();
+        cameraRotationVector.setComponent(-cameraRotationVector.getComponent(1), 1);
     }
     
     

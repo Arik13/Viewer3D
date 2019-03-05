@@ -29,14 +29,14 @@ public class Main {
      * @param args Not used
      */
     public static void main(String[] args) {
-        Matrix identityMatrix = new Matrix(new double[][] 
-        {{1, 2, 0}, {0, 1, 0}, {0, 2, 1}});
-        
-        Matrix anotherMatrix = new Matrix(new double[][] 
-        {{4, 1, 4}, {1, 3, 1}, {1, 1, 2}});
-        
-        System.out.println(anotherMatrix.multiply(identityMatrix));
-        
+//        Matrix identityMatrix = new Matrix(new double[][] 
+//        {{1, 2, 0}, {0, 1, 0}, {0, 2, 1}});
+//        
+//        Matrix anotherMatrix = new Matrix(new double[][] 
+//        {{4, 1, 4}, {1, 3, 1}, {1, 1, 2}});
+//        
+//        System.out.println(anotherMatrix.multiply(identityMatrix));
+//        
         System.setProperty("sun.java2d.opengl", "true");
         
         // Make World
