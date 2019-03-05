@@ -118,3 +118,39 @@ Need to implement
     - world rotation 
     - field of view
     - backface detection
+
+*Triangle recursive point searcher*
+    Before you even start, you can narrow the space using the bounding rectangle of the triangle
+    You could initialize a 2D boolean flag array, then calculate the points on the edge, between two vertices, flip the
+    value of all points on the outside of the edge, then repeat with the next two edges, then 
+    Start at one of the vertices,
+    Perhaps there is a way to crawl the edges, and then walk through the ranges without needing to run any check alg
+    If you knew that you that the other vertices were to the right of the starting vertex, 
+    you could move diagonally, until you hit an impasse, then you could go right and up. If you hit another impasse, you're
+    at the next vertex
+
+
+Full pixel array costs 5.184 mb
+
+([n] number of polygons)* ([t] point in polygon algorithm time) * ([p] number of pixels)
+
+For a resolution of 1440*900
+
+Let T = the total time taken for the point in polygon algorithm for all polygons
+T = 5.184*10^6*t*n 
+
+For a check time of 1 ms, T in seconds is
+T = 5.184*10^3*n
+
+Even for a check time of 1 ns that would be 5.184 s per pixel
+
+
+Instead, I can generate the points inside the polygon, get the intersections, and place their content in the data array
+
+([n] number of polygons)*([p] number of pixels in the polygon)*([g] pixel point generation time)*([i] intersection calculation time)
+T = n*p*g*i (where p is a function of n)
+
+Generate Pixel Points in Polygons
+
+Get rectangle bound of triangle, store maxX, minX, maxY, minY
+Get a single point in the triangle and walk recursively through the pixel points

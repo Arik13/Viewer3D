@@ -1,0 +1,47 @@
+        /*
+        What am I doing?
+        - The amount the rotation angles are adjusted by is not linear or quantized,
+        I need to generate them from the current camera rotation. Perhaps it is easier
+        to define a translation vector amount corresponding to a set angle
+        
+        
+        Say we get a pitch forward event what do we do?
+            We need to rotate the camera y vector one degree forward
+                - Get the x vector, apply rotation matrix around x at one degree
+                - Get the y vector, apply rotation matrix around x at one degree
+                - Get the z vector, apply rotation matrix around x at one degree
+            
+        Say we now get a single yaw left event what do we do?
+            This time, we're not rotating through a unit plane
+                - We need to apply rotations around the camera y axis now, which is no longer also the coordinate y axis
+                - We need to be able to generalize our rotations
+                - We know the y axis will be un-altered
+                - But we don't know what vector we need the x and z axis to move to, but we do know the angle
+                - Known quantities, the axis of rotation, the rotation angle,
+                - Unknown quantities, the resulting axis positions (excluding the axis that is the angle of rotation)
+            
+        Say we get a single roll clockwise event what do we do?
+            
+            
+        
+        // Yaw
+        - Left rotation: a counter clockwise rotation around the cameras y axis, if looking down towards the negative y axis
+        - Right rotation: a clockwise rotation around the cameras y axis, if looking down towards the negative y axis
+        
+        // Pitch
+        - Forward rotation: a counter clockwise rotation around the cameras y axis, if looking along the negative x vector
+        - Backward rotation: a clockwise rotation around the cameras y axis, if looking along the negative x vector
+        
+        // Roll
+        - Clockwise rotation: a clockwise rotation around the cameras z axis, if looking along the negative z vector
+        - Counterclockwise rotation: a counter clockwise rotation around the cameras z axis, if looking along the negative z vector
+        
+        - The camera has its own x, y and z axis
+        
+        - Track the current x, y, z axis
+        - Upon recieving a rotation event, adjust the axis rotation angles accordingly    
+        - Apply x, y and z rotation matrices to the z unit vector, that is the new camera normal
+
+
+        
+        */

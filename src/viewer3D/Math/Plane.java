@@ -82,6 +82,16 @@ public class Plane {
         }
         return startingVector.add(directionVector.multiply(scalingConstant));
     }
+    public Vector getIntersectingVector(Vector positionVector) {
+        double scalingConstant = (pointVector.dot(normalVector))/(positionVector.dot(normalVector));
+        if (scalingConstant == Double.POSITIVE_INFINITY || scalingConstant == Double.NEGATIVE_INFINITY) {
+            return positionVector;
+        }
+        if (scalingConstant < 0) {
+            return positionVector.multiply(1/(-1*scalingConstant));
+        }
+        return positionVector.multiply(scalingConstant);
+    }
     /**
      * 
      * @param width

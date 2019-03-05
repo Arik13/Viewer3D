@@ -1,8 +1,9 @@
 package viewer3D;
 
-
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Insets;
 import java.awt.Toolkit;
 import javax.swing.BorderFactory;
@@ -14,9 +15,7 @@ import javax.swing.border.LineBorder;
 import viewer3D.GraphicsEngine.*;
 import viewer3D.GUI.*;
 import static viewer3D.GraphicsEngine.Direction.*;
-import static viewer3D.GraphicsEngine.Rotation.*;
-import viewer3D.Math.Vector;
-import viewer3D.Polyhedrons.*;
+import viewer3D.Math.Matrix;
 
 /**
  *
@@ -30,20 +29,14 @@ public class Main {
      * @param args Not used
      */
     public static void main(String[] args) {
-//        Vector[][] points = new Vector[][] {
-//            {new Vector(new double[]{0, 0, 0}), new Vector(new double[]{1, 0, 0}), new Vector(new double[]{2, 0, 0}), new Vector(new double[]{3, 0, 0})}, 
-//            {new Vector(new double[]{0, 1, 0}), new Vector(new double[]{1, 1, 0}), new Vector(new double[]{2, 1, 0}), new Vector(new double[]{3, 1, 0})},
-//            {new Vector(new double[]{0, 2, 0}), new Vector(new double[]{1, 2, 0}), new Vector(new double[]{2, 2, 0}), new Vector(new double[]{3, 2, 0})},
-//            {new Vector(new double[]{0, 3, 0}), new Vector(new double[]{1, 3, 0}), new Vector(new double[]{2, 3, 0}), new Vector(new double[]{3, 3, 0})}
-//        };
-//        Vector[] vertices = new Vector[] {
-//            new Vector(new double[]{0.5, 0.5, 0}),
-//            new Vector(new double[]{0.5, 3, 0}),
-//            new Vector(new double[]{2, 1, 0})
-//        };
-//        VectorDrawer2D test = new VectorDrawer2D(points, vertices);
-//        
-     
+        Matrix identityMatrix = new Matrix(new double[][] 
+        {{1, 2, 0}, {0, 1, 0}, {0, 2, 1}});
+        
+        Matrix anotherMatrix = new Matrix(new double[][] 
+        {{4, 1, 4}, {1, 3, 1}, {1, 1, 2}});
+        
+        System.out.println(anotherMatrix.multiply(identityMatrix));
+        
         System.setProperty("sun.java2d.opengl", "true");
         
         // Make World
@@ -51,6 +44,8 @@ public class Main {
         
         // Make Frame
         JFrame frame = new JFrame();
+        //System.out.println(frame.getGraphicsConfiguration().getDevice().getAvailableAcceleratedMemory());
+        
         
         // Get effective screen size
         Dimension screenSize = getScreenDimension(frame);
@@ -140,14 +135,14 @@ public class Main {
                     camera.move(DOWN); 
                     cameraMoved = true;
                 }
-                if (kl.isQPressed()) {
-                    camera.rotate(YAW_LEFT, 1);
-                    cameraMoved = true;
-                }
-                if (kl.isEPressed()) {
-                    camera.rotate(YAW_RIGHT, 1); 
-                    cameraMoved = true;
-                }
+//                if (kl.isQPressed()) {
+//                    camera.rotate(YAW_LEFT, 1);
+//                    cameraMoved = true;
+//                }
+//                if (kl.isEPressed()) {
+//                    camera.rotate(YAW_RIGHT, 1); 
+//                    cameraMoved = true;
+//                }
 //                if (cameraControlPanel.getWasCameraChanged() || projectedPolygonOutputPanel.changedSelection() || cameraViewComponent.wasUpdated()) {
 //                    cameraMoved = true;
 //                }
@@ -163,6 +158,19 @@ public class Main {
                     totalTime += currentMilliSecond-lastMilliSecond + 1;
                     averageFrameRate = (totalFrames)/(totalTime/1000.0); 
                     currentFrameRate = (1000.0/(currentMilliSecond-lastMilliSecond));
+                    
+//                    GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+//                    GraphicsDevice[] devices = env.getScreenDevices();
+//
+//                    int sequence = 1;
+//                    for (GraphicsDevice device : devices) {
+//                        System.out.println("Screen Number [" + (sequence++) + "]");
+//                        System.out.println("Width       : " + device.getDisplayMode().getWidth());
+//                        System.out.println("Height      : " + device.getDisplayMode().getHeight());
+//                        System.out.println("Refresh Rate: " + device.getDisplayMode().getRefreshRate());
+//                        System.out.println("Bit Depth   : " + device.getDisplayMode().getBitDepth());
+//                        System.out.println("");
+//                    }
                 }
             }
             if (currentTenthOfASecond > lastTenthOfASecond) {

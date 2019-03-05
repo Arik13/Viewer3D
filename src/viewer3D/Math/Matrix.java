@@ -38,7 +38,22 @@ public class Matrix {
      * @return
      */
     public Matrix multiply(Matrix otherMatrix) {
-        return new Matrix(0, 0);
+        Matrix newMatrix = new Matrix(matrix.length, otherMatrix.matrix[0].length);
+        // Loop through new matrix
+        for (int i = 0; i < newMatrix.matrix.length; i++) {
+            for (int j = 0; j < newMatrix.matrix[0].length; j++) {
+                // Loop through first matrix and 2nd matrix
+                //System.out.println(newMatrix);
+                for (int k = 0; k < matrix.length; k++) {
+                    //System.out.println("Cell " + i + ":" + j + "(" + newMatrix.matrix[i][j] + ")" +" += " + matrix[i][k] + "*" + otherMatrix.matrix[k][i]);
+                    newMatrix.matrix[i][j] += matrix[i][k]*otherMatrix.matrix[k][j];
+                    //System.out.println(newMatrix.matrix[i][j]);
+                    
+                }
+                //newMatrix.matrix[i][j] += matrix[i][j]*otherMatrix.matrix[j][i];
+            }
+        }
+        return newMatrix;
     }
 
     /**
@@ -148,8 +163,9 @@ public class Matrix {
     }
     @Override
     public String toString() {
-        String objStr = "{";
+        String objStr = getClass().getName() + "\n";
         for (int i = 0; i < matrix.length; i++) {
+            objStr += "{";
             for (int j = 0; j < matrix[0].length; j++) {
                 objStr += matrix[i][j] + ", ";
             }

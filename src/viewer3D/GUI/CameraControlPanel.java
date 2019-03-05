@@ -54,7 +54,7 @@ public final class CameraControlPanel extends JPanel {
      * Refreshes the displayed information content of the panel
      */
     public void update() {
-        speedSlider.setValue((int)camera.getSpeed());
+        speedSlider.setValue((int)(camera.getSpeed()));
         
         xPositionField.setText("" + String.format("%.2f", camera.getXPosition()));
         yPositionField.setText("" + String.format("%.2f", camera.getYPosition()));

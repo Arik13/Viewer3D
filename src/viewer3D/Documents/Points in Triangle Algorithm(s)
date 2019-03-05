@@ -1,0 +1,29 @@
+//______________________________________________________________________________
+TRIANGLE POINT FINDING TRIPLE EDGE BASED ALGORITHM
+    Select two vertices
+    Convert coordinates of vertices to match resolution domain and range
+    Round the coordinates to the nearest integer to find the closest grid point
+    Find the line points at every integer y between the vertex grid points
+    Round the x coordinates of the line points
+    Repeat for each edge
+
+    Use relative position of each line point to get indices of all corresponding points in the screenspace array
+
+    We now have a quantized grid of points representing the edges of the triangle
+    The intersection algorithm can be run on the intervals bounded by the edge points, without performing extra triangle checks
+
+Pros 
+    Less in-triangle checks
+Cons
+    More edge point calculations
+
+How do we build it?
+    Make a triangle
+    Make a grid of points with the width and height of the desired resolution
+    Convert vertices to resolution space
+    
+//______________________________________________________________________________
+TRIANGLE POINT FINDING SINGLE EDGE BASED ALGORITHM
+
+Find the highest and lowest vertex
+Find if the remaining vertex is on the left or right of the line

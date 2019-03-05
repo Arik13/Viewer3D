@@ -1,0 +1,26 @@
+FULL GRAPHICS PIPELINE
+    √ Generate Polygons
+    √ Project Polygons to a projection plane
+    √ Generate pixel points on projection plane in a 2D array of vectors, one for every pixel
+    √ Map projection plane (and its polygons) to screen space
+    Create Raster corresponding to screen pixels
+    Access each screen space polygon
+        Find any point on screen space polygon
+        Recursively walk through points on projected polygon
+            √ check if point exists in triangle
+            use point coordinates relative to screenspace to get corresponding index of 2D projection plane vector array
+            Get intersection of world space polygon through observer and point at found index in vector array
+            Retrieve and store, color and observer distance, in the raster
+            walk to the next point in screen space
+    return the raster to the controller
+    pass the raster to the drawer
+
+CURRENT GRAPHICS PIPELINE
+
+World space
+Get set of polygons, give to camera
+Camera maps all polygons to projection plane
+projection plane is rotated to align perpendicular to z-axis
+rotate projection plane is adjusted to screen space (translation)
+camera passes polygons to controller which passes them to the drawer
+the drawer converts the polygons to 2D polygons, which are then filled
