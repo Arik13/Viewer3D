@@ -1,0 +1,201 @@
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.border.*;
+
+public class RGBViewerFrame extends JFrame{
+   
+   private ActionListener listenerRad;
+   private ActionListener listenerChck;
+   private ActionListener listenerG;
+   private ActionListener listenerB;
+   private ActionListener listenerR;
+   private JCheckBox redCheck;
+   private JCheckBox greenCheck;
+   private JCheckBox blueCheck;
+   private JButton redButton;
+   private JButton greenButton;
+   private JButton blueButton;
+   private JRadioButton redRadio;
+   private JRadioButton greenRadio;
+   private JRadioButton blueRadio;
+   private JPanel center;
+   private JPanel bottom;
+   private JPanel side1;
+   private JPanel side2;
+   
+   public RGBViewerFrame(){
+      
+      class RadioListener implements ActionListener{
+         public void actionPerformed(ActionEvent event){
+            updateRadio();
+         }
+      }
+      
+      class CheckListener implements ActionListener{
+         public void actionPerformed(ActionEvent event){
+            updateCheck();
+         }
+      }
+      
+      class RedButtonListener implements ActionListener{
+         public void actionPerformed(ActionEvent event){
+            updateColour(Color.red);
+         }
+      }
+      
+      class GreenButtonListener implements ActionListener{
+         public void actionPerformed(ActionEvent event){
+            updateColour(Color.green);
+         }
+      }
+      
+      class BlueButtonListener implements ActionListener{
+         public void actionPerformed(ActionEvent event){
+            updateColour(Color.blue);
+         }
+      }
+      
+      listenerRad = new RadioListener();
+      listenerChck = new CheckListener();
+      listenerR = new RedButtonListener();
+      listenerB = new BlueButtonListener();
+      listenerG = new GreenButtonListener();
+      createUpperFrame();
+      createMainFrame();
+      
+      
+   }
+   
+   public void createUpperFrame(){
+      JPanel upperFrame = new JPanel();
+      upperFrame.setLayout(new GridLayout (3,1));
+      upperFrame.add(createButtons());
+      upperFrame.add(createRadio());
+      upperFrame.add(createCheck());
+      add(upperFrame, BorderLayout.NORTH);
+   }
+   
+   public JPanel createButtons(){
+      JPanel buttonPanel = new JPanel();
+      redButton = new JButton();
+      greenButton = new JButton();
+      blueButton = new JButton();
+      redButton.setText("Red");
+      greenButton.setText("Green");
+      blueButton.setText("Blue");
+      redButton.addActionListener(listenerR);
+      greenButton.addActionListener(listenerG);
+      blueButton.addActionListener(listenerB);
+      buttonPanel.add(redButton);
+      buttonPanel.add(greenButton);
+      buttonPanel.add(blueButton);
+      buttonPanel.setBorder(new TitledBorder(new EtchedBorder(), "CENTER COLOUR"));
+      return buttonPanel;
+   }
+   
+   public JPanel createRadio(){
+      JPanel radioPanel = new JPanel();
+      redRadio = new JRadioButton();
+      greenRadio = new JRadioButton();
+      blueRadio = new JRadioButton();
+      redRadio.setText("Red");
+      greenRadio.setText("Green");
+      blueRadio.setText("Blue");
+      redRadio.addActionListener(listenerRad);
+      greenRadio.addActionListener(listenerRad);
+      blueRadio.addActionListener(listenerRad);
+      greenRadio.setSelected(true);
+      ButtonGroup group = new ButtonGroup();
+      group.add(redRadio);
+      group.add(greenRadio);
+      group.add(blueRadio);
+      radioPanel.add(redRadio);
+      radioPanel.add(greenRadio);
+      radioPanel.add(blueRadio);
+      radioPanel.setBorder(new TitledBorder(new EtchedBorder(), "SOUTH COLOUR"));
+      return radioPanel;
+   }
+   
+   public JPanel createCheck(){
+      redCheck = new JCheckBox("Red");
+      greenCheck = new JCheckBox("Green");
+      blueCheck = new JCheckBox("Blue");
+      redCheck.addActionListener(listenerChck);
+      greenCheck.addActionListener(listenerChck);
+      blueCheck.addActionListener(listenerChck);
+      
+      JPanel checkPanel = new JPanel();
+      checkPanel.add(redCheck);
+      checkPanel.add(greenCheck);
+      checkPanel.add(blueCheck);
+      checkPanel.setBorder(new TitledBorder(new EtchedBorder(), "SIDES COLOUR"));
+      
+      return checkPanel;
+   }
+   
+   public void createMainFrame(){
+      JPanel colourPanels = new JPanel();
+      colourPanels.setLayout(new BorderLayout());
+      colourPanels.add(createSide1Panel(), BorderLayout.WEST);
+      colourPanels.add(createCenterPanel(), BorderLayout.CENTER);
+      colourPanels.add(createSide2Panel(), BorderLayout.EAST);
+      colourPanels.add(createBottomPanel(), BorderLayout.SOUTH);
+      add(colourPanels);
+   }
+   
+   public JPanel createCenterPanel(){
+      center = new JPanel();
+      center.setBackground(Color.red);
+      center.setPreferredSize(new Dimension(300,300));
+      return center;
+   }
+      
+   public JPanel createSide1Panel(){
+      side1 = new JPanel();
+      side1.setBackground(Color.blue);
+      side1.setPreferredSize(new Dimension(100,300));
+      return side1;
+   }
+   
+   public JPanel createSide2Panel(){
+      side2 = new JPanel();
+      side2.setBackground(Color.blue);
+      side2.setPreferredSize(new Dimension(100,300));
+      return side2;
+   }
+      
+   public JPanel createBottomPanel(){
+      bottom = new JPanel();
+      bottom.setBackground(Color.green);
+      bottom.setPreferredSize(new Dimension(500,100));
+      return bottom;
+   }
+   
+   public void updateColour(Color color){
+      center.setBackground(color);
+   }
+   
+   public void updateRadio(){
+      if(redRadio.isSelected())
+         bottom.setBackground(Color.red);
+      else if(blueRadio.isSelected())
+         bottom.setBackground(Color.blue);
+      else
+         bottom.setBackground(Color.green);
+   }
+         
+   public void updateCheck(){
+      int r = 0;
+      int g = 0;
+      int b = 0;
+      if(redCheck.isSelected())
+         r = 255;
+      if(greenCheck.isSelected())
+         g = 255;
+      if(blueCheck.isSelected())
+         b = 255;
+      side1.setBackground(new Color(r,g,b));
+      side2.setBackground(new Color(r,g,b));
+   }
+}
