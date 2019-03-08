@@ -116,7 +116,7 @@ public class Floor implements Polyhedron {
      * @return
      */
     @Override
-    public Vector getNorma() {
+    public Vector getNormal() {
         return normalVector;
     }
 }

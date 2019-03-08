@@ -2,18 +2,19 @@ FULL GRAPHICS PIPELINE
     √ Generate Polygons
     √ Project Polygons to a projection plane
     √ Generate pixel points on projection plane in a 2D array of vectors, one for every pixel
+        ** Switch from recursive algorithm to incremental
     √ Map projection plane (and its polygons) to screen space
     Create Raster corresponding to screen pixels
     Access each screen space polygon
-        Find any point on screen space polygon
-        Recursively walk through points on projected polygon
-            √ check if point exists in triangle
-            use point coordinates relative to screenspace to get corresponding index of 2D projection plane vector array
-            Get intersection of world space polygon through observer and point at found index in vector array
-            Retrieve and store, color and observer distance, in the raster
-            walk to the next point in screen space
-    return the raster to the controller
-    pass the raster to the drawer
+    Use triple edge bounding algorithm to get points bounded by polygon
+    Ask polygon for min vertex distance
+    For each point in each polygon
+        Get intersection point of bounded point with original polygon
+        Get distance between camera and intersection point
+        If distance is is less than the stored distance at the current index
+            Get the color at the intersection point from the polygon            
+            Store color in raster
+    Draw the raster
 
 CURRENT GRAPHICS PIPELINE
 

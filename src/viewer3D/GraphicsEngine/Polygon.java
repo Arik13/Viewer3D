@@ -2,6 +2,7 @@ package viewer3D.GraphicsEngine;
 
 import viewer3D.Math.Vector;
 import java.awt.Color;
+import java.awt.Rectangle;
 import viewer3D.Math.Plane;
 
 /**
@@ -207,15 +208,38 @@ public class Polygon {
     }
     @Override
     public String toString() {
-        return "Selected: " + selected + "     " +
-                "Face Color: " + faceColor + "     " +
-                "Edge Color: " + edgeColor + "     " +
-                "Shape ID: " + shapeID + "     " +
-                "Polygon ID: " + polygonID;
+        return 
+                "Shape ID: " + shapeID + 
+                "   Polygon ID: " + polygonID +
+                "   Selected: " + selected + 
+                "   Face Color: " + faceColor + 
+                "   Edge Color: " + edgeColor;
     }
     
     private Vector calcNormal() {
         Vector v = (vertices[1].subtract(vertices[0])).cross((vertices[2].subtract(vertices[0])));
         return v.multiply(1/v.getLength());
+    }
+    public double[] getXYBounds() {
+//        double minX = vertices[0].getComponent(0);
+//        double maxX = vertices[0].getComponent(0);
+//        double minY = vertices[0].getComponent(1);
+//        double maxY = vertices[0].getComponent(1);
+        double[] xyBounds = {
+            vertices[0].getComponent(0),   // minX
+            vertices[0].getComponent(0),   // maxX
+            vertices[0].getComponent(1),   // minY
+            vertices[0].getComponent(1)};  // maxY
+        for (int i = 1; i < vertices.length; i++) {
+            if (vertices[i].getComponent(0) < xyBounds[0])
+                xyBounds[0] = vertices[i].getComponent(0);  // minX
+            if (vertices[i].getComponent(0) > xyBounds[1])
+                xyBounds[1] = vertices[i].getComponent(0);  // maxX
+            if (vertices[i].getComponent(1) < xyBounds[2])
+                xyBounds[2] = vertices[i].getComponent(1);  // minY
+            if (vertices[i].getComponent(1) > xyBounds[3])
+                xyBounds[3] = vertices[i].getComponent(1);  // maxY
+        }
+        return xyBounds;
     }
 }

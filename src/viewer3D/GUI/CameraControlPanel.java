@@ -82,7 +82,7 @@ public final class CameraControlPanel extends JPanel {
     private void initSpeedComponents() {
         speedLabel = new JLabel("Speed");
         speedSlider = new JSlider();
-        speedSlider.setMaximum(10);
+        speedSlider.setMaximum(100);
         speedSlider.setMinimum(1);
         speedSlider.setMajorTickSpacing(1);
         speedSlider.setSnapToTicks(true);

@@ -1,13 +1,19 @@
 package viewer3D;
 
+import java.awt.BufferCapabilities;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Insets;
+import java.awt.RenderingHints;
 import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -16,27 +22,20 @@ import viewer3D.GraphicsEngine.*;
 import viewer3D.GUI.*;
 import static viewer3D.GraphicsEngine.Direction.*;
 import viewer3D.Math.Matrix;
+import viewer3D.Math.Vector;
 
 /**
  *
  * @author Arik Dicks
  */
 public class Main {
-
+    static BufferedImage image;
     /**
      * Creates a GUI containing the camera view, its control panel, and tables showing 
      * all polygon information, and updates the camera when the user presses keys
      * @param args Not used
      */
     public static void main(String[] args) {
-//        Matrix identityMatrix = new Matrix(new double[][] 
-//        {{1, 2, 0}, {0, 1, 0}, {0, 2, 1}});
-//        
-//        Matrix anotherMatrix = new Matrix(new double[][] 
-//        {{4, 1, 4}, {1, 3, 1}, {1, 1, 2}});
-//        
-//        System.out.println(anotherMatrix.multiply(identityMatrix));
-//        
         System.setProperty("sun.java2d.opengl", "true");
         
         // Make World
@@ -50,15 +49,15 @@ public class Main {
         // Get effective screen size
         Dimension screenSize = getScreenDimension(frame);
 
+        // Set Camera View dimensions
+        int width = 400;
+        int height = width;
+        
         // Make Camera
         Polygon[] polygons = world.getPolygons();
-        Camera camera = new Camera(polygons);
+        Camera camera = new Camera(polygons, width, height, frame.getGraphicsConfiguration());
         Polygon[] screenSpacePolygons = camera.observe();
-        
-
-        // Set Camera View dimensions
-        int width = 600;
-        int height = width;
+        image = camera.getBufferedImage();
         
         // Make Camera Control Panel
         int controlPanelHeight = 100;
@@ -93,6 +92,43 @@ public class Main {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
         //frame.setLocationRelativeTo(null);
+        
+        JComponent imageComponent = new JComponent() {
+            @Override
+            public void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g;
+                
+                //g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                //System.out.println(g2.drawImage(camera.getBufferedImage(), 0, 0, this));
+                while(!g2.drawImage(image, 0, 0, this)){};
+            }
+//            @Override
+//            public void update(Graphics g) {
+//                paint(g);
+//            }
+//            @Override
+//            public void paint(Graphics g) {
+//                g.drawImage(camera.getBufferedImage(), 0, 0, null);
+//            }
+        };
+        //imageComponent;
+        imageComponent.setDoubleBuffered(true);
+        JFrame imageFrame = new JFrame();
+        
+//        System.out.println(imageFrame.getBufferStrategy());
+        imageFrame.getRootPane().setDoubleBuffered(true);
+        imageFrame.add(imageComponent);
+        imageFrame.setSize(width, height);
+        imageFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        imageFrame.setVisible(true);
+        imageFrame.setLocationRelativeTo(null);
+        imageFrame.createBufferStrategy(2);
+        
+//        JFrame imageFrame = new JFrame();
+//        imageFrame.setSize(width, height);
+//        imageFrame.pack();
+//        imageFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        imageFrame.setVisible(true);
         
         // Make keyboard listener
         KeyListener kl = new KeyListener();
@@ -150,6 +186,8 @@ public class Main {
                     cameraMoved = true;
                 }
                 if (cameraMoved) {
+                    image = camera.getBufferedImage();
+                    imageComponent.repaint();
                     screenSpacePolygons = camera.observe();
                     cameraViewComponent.drawPolygons(screenSpacePolygons);
                     //projectedPolygonOutputPanel.setPolygons(screenSpacePolygons);

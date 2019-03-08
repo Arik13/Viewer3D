@@ -101,16 +101,26 @@ public class Plane {
      */
     public Vector[][] getGridOfVectors(int width, int height, Vector[] vertices) {
         Vector[][] gridVectors = new Vector[height][width];
-        gridVectors[0][0] = vertices[0];
-        gridVectors[0][width-1] = vertices[1];
-        gridVectors[height-1][0] = vertices[2];
-        gridVectors[height-1][width-1] = vertices[3];
-        calcColMiddleVector(gridVectors, 0, width-1, 0);
-        calcColMiddleVector(gridVectors, 0, width-1, height-1);
         for (int i = 0; i < gridVectors.length; i++) {
-            calcRowMiddleVector(gridVectors[i], 0, width-1);
+        //for (int i = gridVectors.length-1; i >= 0 ; i--) {
+            double y = 2*((double)(i)/(height-1))-1;
+            for (int j = 0; j < gridVectors[0].length; j++) {    
+                double x = 2*((double)j/(width-1))-1;
+                gridVectors[i][j] = new Vector(new double[]{x, y, 1});
+            }
         }
         return gridVectors;
+
+//        gridVectors[0][0] = vertices[0];
+//        gridVectors[0][width-1] = vertices[1];
+//        gridVectors[height-1][0] = vertices[2];
+//        gridVectors[height-1][width-1] = vertices[3];
+//        calcColMiddleVector(gridVectors, 0, width-1, 0);
+//        calcColMiddleVector(gridVectors, 0, width-1, height-1);
+//        for (int i = 0; i < gridVectors.length; i++) {
+//            calcRowMiddleVector(gridVectors[i], 0, width-1);
+//        }
+//        return gridVectors;
     }
 
     /**

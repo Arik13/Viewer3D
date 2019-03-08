@@ -1,1 +1,3 @@
 Implement z-buffer and pixel algorithm
+    - Implement triple-edge bounding algorithm
+        √ Point in triangle algorithm

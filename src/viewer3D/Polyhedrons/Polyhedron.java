@@ -19,7 +19,7 @@ public interface Polyhedron {
      *
      * @return
      */
-    public Vector getNorma();
+    public Vector getNormal();
 
     /**
      *

@@ -10,6 +10,7 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Robot;
+import java.awt.Shape;
 import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
@@ -39,6 +40,7 @@ public class CameraViewComponent extends JComponent {
     private int mouseSensitivity;
     private boolean wasUpdated;
     private Robot cursorSetter;
+    private BufferedImage image;
     /**
      * Constructs a CameraViewComponent with a given width and height, and a set of screen-space polygons 
      * @param camera
@@ -55,6 +57,7 @@ public class CameraViewComponent extends JComponent {
         this.width = width;
         this.height = height;
         this.polygons = polygons;
+        this.image = null;
         polygons2D = new java.awt.Polygon[polygons.length];
         border = new LineBorder(Color.BLACK, 2, false);
         mouseSensitivity = 5;
@@ -72,6 +75,8 @@ public class CameraViewComponent extends JComponent {
     @Override
     public void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g;
+        g2.setColor(Color.BLACK);
+        g2.fill(this.getBounds());
         set2DPolygons();
         
         // Draw Polygon Faces
@@ -91,10 +96,13 @@ public class CameraViewComponent extends JComponent {
                 g2.setColor(edgeColor);
                 g2.draw(polygons2D[i]);
             }
+            g2.setColor(Color.red);
+            g2.draw(polygons2D[i].getBounds());
         }
         
         // Draw Camera Data
         FontMetrics metrics = g2.getFontMetrics(this.getFont());
+        g2.setColor(Color.WHITE);
         int fontHeight = metrics.getHeight();
         for (int i = 0; i < data.length; i++) {
             g2.drawString(data[i], 10, (i+1)*fontHeight + border.getThickness());
@@ -135,6 +143,11 @@ public class CameraViewComponent extends JComponent {
             polygons2D[i].addPoint((int)Math.round(x3), (int)Math.round(y3));
         }
     }
+    public void drawImage(BufferedImage image) {
+        this.image = image;
+        repaint();
+    }
+        
     public boolean wasUpdated() {
         if (wasUpdated) {
             wasUpdated = false;

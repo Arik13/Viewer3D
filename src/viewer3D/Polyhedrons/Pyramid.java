@@ -106,7 +106,7 @@ public class Pyramid implements Polyhedron {
      * @return
      */
     @Override
-    public Vector getNorma() {
+    public Vector getNormal() {
         return normalVector;
     }
 }

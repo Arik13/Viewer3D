@@ -84,7 +84,7 @@ public class Axes3D implements Polyhedron {
      * @return
      */
     @Override
-    public Vector getNorma() {
+    public Vector getNormal() {
         return normalVector;
     }
 }
