@@ -1,5 +1,6 @@
 package viewer3D.GraphicsEngine;
 
+import viewer3D.Math.Plane;
 import viewer3D.Math.Vector;
 
 /**
@@ -7,8 +8,9 @@ import viewer3D.Math.Vector;
  * @author Arik Dicks
  */
 public class ProjectedPolygon extends Polygon {
-    Polygon originalPolygon;
-
+    private Polygon originalPolygon;
+//    private Vector normal;
+//    private Plane plane;
     /**
      * Constructs this polygon with vertices and a reference to the original polygon
      * @param vectorArray The vertices of this polygon
@@ -49,4 +51,7 @@ public class ProjectedPolygon extends Polygon {
     public Vector getNormal() {
         return originalPolygon.getNormal();
     }
+//    public Vector getIntersectingVector(Vector directionVector) {
+//        return plane.getIntersectingVector(directionVector);
+//    }
 }

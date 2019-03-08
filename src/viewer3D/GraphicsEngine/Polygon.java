@@ -2,7 +2,6 @@ package viewer3D.GraphicsEngine;
 
 import viewer3D.Math.Vector;
 import java.awt.Color;
-import java.awt.Rectangle;
 import viewer3D.Math.Plane;
 
 /**
@@ -29,10 +28,8 @@ public class Polygon {
     public Polygon(Vector[] vectorArray) {
         isVisible = false;
         vertices = vectorArray;
-        this.polygonID = polygonID;
         plane = new Plane(vertices[0], calcNormal());
     }
-
     /**
      * Constructs a polygon with vertices corresponding to the given vector array, 
      * and with the given polygon ID
@@ -45,7 +42,6 @@ public class Polygon {
         this.polygonID = polygonID;
         plane = new Plane(vertices[0], calcNormal());
     }
-
     /**
      * Sets the vertex at the given index to be the given vector
      * @param vertex A vector
@@ -54,7 +50,6 @@ public class Polygon {
     public void setVertex(Vector vertex, int index) {
         vertices[index] = vertex;
     }
-
     /**
      * Sets the vertices of the polygon to be the vectors in the given vector array
      * @param vectorArray An array of vertices
@@ -62,7 +57,6 @@ public class Polygon {
     public void setVertices(Vector[] vectorArray) {
         vertices = vectorArray;
     }
-
     /**
      * Sets the vertices of the polygon to be the coordinates in the given double arrays
      * @param vectorArray1 The coordinates of the first vertex
@@ -74,7 +68,6 @@ public class Polygon {
         vertices[1] = new Vector(vectorArray2);
         vertices[2] = new Vector(vectorArray3);
     }
-
     /**
      * Sets the vertices of the polygon to be the give vectors
      * @param vertex1 The first vertex
@@ -86,7 +79,6 @@ public class Polygon {
         vertices[1] = vertex2;
         vertices[2] = vertex3;
     }
-
     /**
      * Sets the color of this polygons face
      * @param color The color of this polygons face
@@ -94,7 +86,6 @@ public class Polygon {
     public void setFaceColor(Color color) {
         this.faceColor = color;
     }
-
     /**
      * Sets the color of this polygons edges
      * @param color The color of this polygons edges
@@ -102,7 +93,6 @@ public class Polygon {
     public void setEdgeColor(Color color) {
         this.edgeColor = color;
     }
-
     /**
      * Sets the ID of this polygon
      * @param polygonID The ID of this polygon
@@ -110,7 +100,6 @@ public class Polygon {
     public void setPolygonID(String polygonID) {
         this.polygonID = polygonID;
     }
-
     /**
      * Sets the ID of the shape of which this polygon is a piece of
      * @param shapeID The ID of the shape of which this polygon is a piece of
@@ -118,7 +107,6 @@ public class Polygon {
     public void setShapeID(String shapeID) {
         this.shapeID = shapeID;
     }
-
     public void setIsVisible(boolean isVisible) {
         this.isVisible = isVisible;
     }
@@ -130,7 +118,6 @@ public class Polygon {
     public Vector getVertex(int index) {
         return vertices[index];
     }
-
     /**
      * Returns the vertices of this polygon
      * @return the vertices of this polygon
@@ -138,7 +125,6 @@ public class Polygon {
     public Vector[] getVertices() {
         return vertices;
     }
-
     /**
      * Returns the color of this polygons face (if the polygon is selected, returns the selection color)
      * @return the color of this polygons face (if the polygon is selected, returns the selection color)
@@ -149,7 +135,6 @@ public class Polygon {
         }
         return this.faceColor;
     }
-
     /**
      * Returns the color of this polygons edges
      * @return the color of this polygons edges
@@ -157,7 +142,6 @@ public class Polygon {
     public Color getEdgeColor() {
         return this.edgeColor;
     }
-
     /**
      * Returns the polygonID of this polygon
      * @return the polygonID of this polygon
@@ -165,7 +149,6 @@ public class Polygon {
     public String getPolygonID() {
         return polygonID;
     }
-
     /**
      * Returns the shapeID of the shape of which this polygon is a part of
      * @return the shapeID of the shape of which this polygon is a part of
@@ -192,14 +175,12 @@ public class Polygon {
         this.polygonID = otherPolygon.polygonID;
         this.isVisible = otherPolygon.isVisible;
     }
-
     /**
      * Sets the selection status of this polygon to true
      */ 
     public void select() {
         selected = true;
     }
-
     /**
      * Sets the selection status of this polygon to false
      */
@@ -215,16 +196,11 @@ public class Polygon {
                 "   Face Color: " + faceColor + 
                 "   Edge Color: " + edgeColor;
     }
-    
     private Vector calcNormal() {
         Vector v = (vertices[1].subtract(vertices[0])).cross((vertices[2].subtract(vertices[0])));
         return v.multiply(1/v.getLength());
     }
     public double[] getXYBounds() {
-//        double minX = vertices[0].getComponent(0);
-//        double maxX = vertices[0].getComponent(0);
-//        double minY = vertices[0].getComponent(1);
-//        double maxY = vertices[0].getComponent(1);
         double[] xyBounds = {
             vertices[0].getComponent(0),   // minX
             vertices[0].getComponent(0),   // maxX
@@ -241,5 +217,17 @@ public class Polygon {
                 xyBounds[3] = vertices[i].getComponent(1);  // maxY
         }
         return xyBounds;
+    }
+    public Color getIntersectingPointColor (Vector vector) {
+        // get intersection point, convert to polygon coordinates
+        // get index at that point 
+        // return the color at that index
+        return Color.WHITE;
+    }
+    public Vector getIntersectingVector(Vector directionVector) {
+        return plane.getIntersectingVector(directionVector);
+    }
+    public Vector lineIntersection(Vector directionVector) {
+        return plane.lineIntersection(directionVector);
     }
 }

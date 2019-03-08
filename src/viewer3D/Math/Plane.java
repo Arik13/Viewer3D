@@ -85,13 +85,23 @@ public class Plane {
     public Vector getIntersectingVector(Vector positionVector) {
         double scalingConstant = (pointVector.dot(normalVector))/(positionVector.dot(normalVector));
         if (scalingConstant == Double.POSITIVE_INFINITY || scalingConstant == Double.NEGATIVE_INFINITY) {
+            //System.out.println(positionVector);
             return positionVector;
+            //return new Vector(new double[] {0, 0, 0});
         }
         if (scalingConstant < 0) {
             return positionVector.multiply(1/(-1*scalingConstant));
         }
         return positionVector.multiply(scalingConstant);
     }
+    public Vector lineIntersection(Vector directionVector) {
+        if (normalVector.dot(directionVector) == 0) {
+            return null;
+        }
+        double t = (normalVector.dot(pointVector) - normalVector.dot(directionVector)) / normalVector.dot(directionVector);
+        return directionVector.add(directionVector.multiply(t));
+    }
+
     /**
      * 
      * @param width
@@ -110,47 +120,5 @@ public class Plane {
             }
         }
         return gridVectors;
-
-//        gridVectors[0][0] = vertices[0];
-//        gridVectors[0][width-1] = vertices[1];
-//        gridVectors[height-1][0] = vertices[2];
-//        gridVectors[height-1][width-1] = vertices[3];
-//        calcColMiddleVector(gridVectors, 0, width-1, 0);
-//        calcColMiddleVector(gridVectors, 0, width-1, height-1);
-//        for (int i = 0; i < gridVectors.length; i++) {
-//            calcRowMiddleVector(gridVectors[i], 0, width-1);
-//        }
-//        return gridVectors;
-    }
-
-    /**
-     *
-     * @param vectorArray
-     * @param lo
-     * @param hi
-     */
-    public void calcRowMiddleVector(Vector[] vectorArray, int lo, int hi) {
-        if (hi==lo+1)
-            return;
-        int mid = (hi-lo)/2 + lo;
-        vectorArray[mid] = vectorArray[lo].add((vectorArray[hi].subtract(vectorArray[lo])).multiply(0.5));
-        calcRowMiddleVector(vectorArray, lo, mid);
-        calcRowMiddleVector(vectorArray, mid, hi);
-    }
-
-    /**
-     *
-     * @param vectorArray
-     * @param lo
-     * @param hi
-     * @param col
-     */
-    public void calcColMiddleVector(Vector[][] vectorArray, int lo, int hi, int col) {
-        if (hi==lo+1)
-            return;
-        int mid = (hi-lo)/2 + lo;
-        vectorArray[mid][col] = vectorArray[lo][col].add((vectorArray[hi][col].subtract(vectorArray[lo][col])).multiply(0.5));
-        calcColMiddleVector(vectorArray, lo, mid, col);
-        calcColMiddleVector(vectorArray, mid, hi, col);
     }
 }

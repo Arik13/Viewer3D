@@ -30,7 +30,7 @@ public class Pyramid implements Polyhedron {
         double[] vertexArray1 = {x,y,z};                        // Front Bottom Left
         double[] vertexArray2 = {x+scale,y,z+scale*2};          // Back Bottom Center
         double[] vertexArray3 = {x+2*scale,y,z};                // Front Bottom Right
-        double[] vertexArray4 = {x+scale,y+scale*4,z+scale};    // Middle Top Center 
+        double[] vertexArray4 = {x+scale,y+scale*2,z+scale};    // Middle Top Center 
         
         // Bottom face
         Polygon p1 = new Polygon(new Vector[]{

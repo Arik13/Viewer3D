@@ -1,19 +1,12 @@
 package viewer3D;
 
-import java.awt.BufferCapabilities;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 import java.awt.Insets;
-import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -21,8 +14,6 @@ import javax.swing.border.LineBorder;
 import viewer3D.GraphicsEngine.*;
 import viewer3D.GUI.*;
 import static viewer3D.GraphicsEngine.Direction.*;
-import viewer3D.Math.Matrix;
-import viewer3D.Math.Vector;
 
 /**
  *
@@ -50,14 +41,13 @@ public class Main {
         Dimension screenSize = getScreenDimension(frame);
 
         // Set Camera View dimensions
-        int width = 400;
+        int width = 730;
         int height = width;
         
         // Make Camera
         Polygon[] polygons = world.getPolygons();
         Camera camera = new Camera(polygons, width, height, frame.getGraphicsConfiguration());
-        Polygon[] screenSpacePolygons = camera.observe();
-        image = camera.getBufferedImage();
+        image = camera.observe();
         
         // Make Camera Control Panel
         int controlPanelHeight = 100;
@@ -66,7 +56,8 @@ public class Main {
         cameraControlPanel.setBorder(BorderFactory.createCompoundBorder(new LineBorder(Color.BLACK, 2, false), new EmptyBorder(10, 10, 10, 10)));
         
         // Make Camera View Component
-        CameraViewComponent cameraViewComponent = new CameraViewComponent(camera, screenSpacePolygons, width, height);
+        CameraViewComponent cameraViewComponent = new CameraViewComponent(camera);
+        cameraViewComponent.setImage(image);
         cameraViewComponent.updateData(camera.getData());
         cameraViewComponent.setPreferredSize(new Dimension(width, height));
 
@@ -77,59 +68,15 @@ public class Main {
         cameraPanel.add(cameraViewComponent);
         cameraPanel.add(cameraControlPanel);
 
-        // Make Polygon Control Panel
-//        PolygonOutputPanel projectedPolygonOutputPanel = new PolygonOutputPanel("Screenspace Polygons");
-//        projectedPolygonOutputPanel.setPolygons(screenSpacePolygons);
-//        projectedPolygonOutputPanel.setPreferredSize(new Dimension((int)Math.round(screenSize.getWidth()-width-20), height + controlPanelHeight));
-        
         // Make Master Panel
         JPanel masterPanel = new JPanel();
         masterPanel.add(cameraPanel);
-        //masterPanel.add(projectedPolygonOutputPanel);
         
         frame.add(masterPanel);
         frame.pack();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
-        //frame.setLocationRelativeTo(null);
-        
-        JComponent imageComponent = new JComponent() {
-            @Override
-            public void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g;
-                
-                //g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-                //System.out.println(g2.drawImage(camera.getBufferedImage(), 0, 0, this));
-                while(!g2.drawImage(image, 0, 0, this)){};
-            }
-//            @Override
-//            public void update(Graphics g) {
-//                paint(g);
-//            }
-//            @Override
-//            public void paint(Graphics g) {
-//                g.drawImage(camera.getBufferedImage(), 0, 0, null);
-//            }
-        };
-        //imageComponent;
-        imageComponent.setDoubleBuffered(true);
-        JFrame imageFrame = new JFrame();
-        
-//        System.out.println(imageFrame.getBufferStrategy());
-        imageFrame.getRootPane().setDoubleBuffered(true);
-        imageFrame.add(imageComponent);
-        imageFrame.setSize(width, height);
-        imageFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        imageFrame.setVisible(true);
-        imageFrame.setLocationRelativeTo(null);
-        imageFrame.createBufferStrategy(2);
-        
-//        JFrame imageFrame = new JFrame();
-//        imageFrame.setSize(width, height);
-//        imageFrame.pack();
-//        imageFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//        imageFrame.setVisible(true);
-        
+
         // Make keyboard listener
         KeyListener kl = new KeyListener();
         
@@ -171,44 +118,18 @@ public class Main {
                     camera.move(DOWN); 
                     cameraMoved = true;
                 }
-//                if (kl.isQPressed()) {
-//                    camera.rotate(YAW_LEFT, 1);
-//                    cameraMoved = true;
-//                }
-//                if (kl.isEPressed()) {
-//                    camera.rotate(YAW_RIGHT, 1); 
-//                    cameraMoved = true;
-//                }
-//                if (cameraControlPanel.getWasCameraChanged() || projectedPolygonOutputPanel.changedSelection() || cameraViewComponent.wasUpdated()) {
-//                    cameraMoved = true;
-//                }
                 if (cameraControlPanel.getWasCameraChanged() || cameraViewComponent.wasUpdated()) {
                     cameraMoved = true;
                 }
                 if (cameraMoved) {
-                    image = camera.getBufferedImage();
-                    imageComponent.repaint();
-                    screenSpacePolygons = camera.observe();
-                    cameraViewComponent.drawPolygons(screenSpacePolygons);
-                    //projectedPolygonOutputPanel.setPolygons(screenSpacePolygons);
+                    image = camera.observe();
+                    cameraViewComponent.setImage(image);
+                    cameraViewComponent.repaint();
                     cameraControlPanel.update();   
                     totalFrames++;
                     totalTime += currentMilliSecond-lastMilliSecond + 1;
                     averageFrameRate = (totalFrames)/(totalTime/1000.0); 
                     currentFrameRate = (1000.0/(currentMilliSecond-lastMilliSecond));
-                    
-//                    GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
-//                    GraphicsDevice[] devices = env.getScreenDevices();
-//
-//                    int sequence = 1;
-//                    for (GraphicsDevice device : devices) {
-//                        System.out.println("Screen Number [" + (sequence++) + "]");
-//                        System.out.println("Width       : " + device.getDisplayMode().getWidth());
-//                        System.out.println("Height      : " + device.getDisplayMode().getHeight());
-//                        System.out.println("Refresh Rate: " + device.getDisplayMode().getRefreshRate());
-//                        System.out.println("Bit Depth   : " + device.getDisplayMode().getBitDepth());
-//                        System.out.println("");
-//                    }
                 }
             }
             if (currentTenthOfASecond > lastTenthOfASecond) {

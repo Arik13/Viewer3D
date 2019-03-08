@@ -1,28 +1,11 @@
 package viewer3D.GraphicsEngine;
 
-import static java.awt.AlphaComposite.CLEAR;
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
-import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferByte;
-import java.awt.image.Raster;
-import java.awt.image.VolatileImage;
-import java.awt.image.WritableRaster;
-import java.io.File;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 import viewer3D.Math.Matrix;
 import viewer3D.Math.Plane;
 import viewer3D.Math.Vector;
-import viewer3D.ProjectionTester;
 
 /**
  * Responsible for observing a given set of polygons and projecting them into a 
@@ -33,7 +16,7 @@ public class Camera {
     private Plane projectionPlane;
     private Polygon[] polygons;
     private ProjectedPolygon[] projectedPolygons;
-    private ProjectedPolygon[] screenspacePolygons;
+    private ProjectedPolygon[] translatedPolygons;
     private Vector[][] projectionPoints;
     private final Vector projectionPlanePosition;
     private final Vector originVector;
@@ -60,11 +43,7 @@ public class Camera {
     private double yFOV;
     private double[][] zBuffer;
     private double[] polygonBounds;
-    private WritableRaster raster;
-    private ColorModel colorModel;
     private BufferedImage image;
-    private BufferedImage clearedImage;
-    private VolatileImage vImage;
     private GraphicsConfiguration gc;
     /**
      * Camera is constructed with a speed of 10 and an initial position of {0, 150, -450}
@@ -125,19 +104,11 @@ public class Camera {
 
         projectionPlane = new Plane(projectionPlanePosition, normalVector);
         
-        zBuffer = new double[height][width];
-        image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        clearedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        image.setAccelerationPriority(1);
-        vImage = gc.createCompatibleVolatileImage(width, height);
-        vImage.setAccelerationPriority(1);
-        //raster = image.getRaster();
-        
         setProjectionPoints();
-//        System.out.println(image.getColorModel());
-//        System.out.println(image.getRaster().setSample(phi, phi, phi, phi));
-//        System.out.println(image.getSampleModel());
+        zBuffer = new double[height][width];
         
+        image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        image.setAccelerationPriority(1);
     }
 
     /**
@@ -145,30 +116,21 @@ public class Camera {
      * usable by drawer classes
      * @return
      */
-    public Polygon[] observe() {
-        //projectionPlane = new Plane(normalVector, normalVector);
+    public BufferedImage observe() {
         projectPolygons();
-        mapPolygonsToScreenSpace();
-        Graphics2D g2 = image.createGraphics();
-//        g2.setBackground(Color.BLACK);
-        //image.setData(clearedImage.getRaster());
-        
-//        g2.setColor(Color.BLACK);
-//        g2.fillRect(0, 0, width, height);
-        image = gc.createCompatibleImage(width, height);//new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        //vImage.createGraphics();
+        image = gc.createCompatibleImage(width, height);
+        zBuffer = new double[height][width];
         rasterizePolygons();
-        //printVectorArray2D(projectionPoints, "Projection Points");
-        //ProjectionTester drawer = new ProjectionTester(projectionPoints, polygons2D[0]);
-        // Create Buffered Image and return
-        return screenspacePolygons;
+        return image;
     }
     
     private void projectPolygons() {
         // Project polygons onto camera plane
+        translatedPolygons = new ProjectedPolygon[polygons.length];
         projectedPolygons = new ProjectedPolygon[polygons.length];
         for (int i = 0; i < polygons.length; i++) {
             Vector[] vertices = {polygons[i].getVertex(0), polygons[i].getVertex(1), polygons[i].getVertex(2)};
+            Vector[] translatedVertices = new Vector[vertices.length];
             Vector[] projectedVertices = new Vector[vertices.length];
             for (int j = 0; j < projectedVertices.length; j++) {
                 // rotate and translate the point before getting its intersection
@@ -176,57 +138,20 @@ public class Camera {
                 Vector newPosition = (fromCameraVector)
                         .multiply(yawMatrix)
                         .multiply(pitchMatrix);
+                translatedVertices[j] = newPosition;
                 projectedVertices[j] = projectionPlane.getIntersectingVector(newPosition);
             }
+            translatedPolygons[i] = new ProjectedPolygon(translatedVertices, polygons[i]);
             projectedPolygons[i] = new ProjectedPolygon(projectedVertices, polygons[i]);
         }
     }
-    
-    private void mapPolygonsToScreenSpace() {
-        // Map camera plane to screen space
-        double[] vectorArray = {1, 1, 0};
-        Vector vector = new Vector(vectorArray);
-
-        screenspacePolygons = new ProjectedPolygon[polygons.length];
-        for (int i = 0; i < projectedPolygons.length; i++) {
-            Vector[] vertices = projectedPolygons[i].getVertices();
-            Vector[] screenSpaceVertices = new Vector[3];
-            for (int j = 0; j < vertices.length; j++) {
-                screenSpaceVertices[j] = (vertices[j]).add(vector).multiply(0.5);
-            }
-            screenspacePolygons[i] = new ProjectedPolygon(screenSpaceVertices, polygons[i]);
-        }
-    }
     private void rasterizePolygons() {
-        
-        for (int i = 0; i < projectedPolygons.length; i++) {
-            calcPointsInPolygon(projectedPolygons[i]);
-            
+        for (int i = 0; i < translatedPolygons.length; i++) {
+            rasterizePolygon(projectedPolygons[i], translatedPolygons[i]);
         }
-        
-
     }
-    private void calcPointsInPolygon(ProjectedPolygon polygon) {
-            // Find points in polygon Algorithm
-        // Going to implement single edge algorithm, as its simpler, for now
-
-        // Get the highest and lowest vertex
-        // Describe the line
-        // Round the vertex to nearest interior point
-        // Get the next highest point
-
-        // Actually, lets implement the bounding box algorithm, its even simpler
-
-        // Get minX, minY, maxX, maxY
-
-        polygonBounds = polygon.getXYBounds();
-        
-        // Projection points range from -1 to 1 in both axises 
-        // The polygons however, have been already mapped to the unit square (0 to 1 in both axises)
-        // I need the projection points to range from -1 to 1 for getting the intersections between the origin and the polygon points
-        // I need to compare the projection points to the polygons pre-mapping OR convert the projection points
-        // 
-        
+    private void rasterizePolygon(ProjectedPolygon polygon, ProjectedPolygon translatedPolygon) {
+        polygonBounds = polygon.getXYBounds();        
         int colLo = (int)(((polygonBounds[0]+1)/2)*height);
         int colHi = (int)(((polygonBounds[1]+1)/2)*height+1);
         int rowLo = (int)(((polygonBounds[2]+1)/2)*width);
@@ -244,27 +169,18 @@ public class Camera {
         colHi = (colHi < 0)? 0 : colHi;
         colHi = (colHi >= width)? width - 1 : colHi;
 
-//        System.out.println("RowHi: " + rowHi);
-//        System.out.println("RowLo: " + rowLo);
-//        System.out.println("ColHi: " + colHi);
-//        System.out.println("ColLo: " + colLo);
-//
-//        System.out.println(polygon);
-//        System.out.print("Polygon Hi \t{" + String.format("%.2f", polygonBounds[0]) + ", " + String.format("%.2f", polygonBounds[3]) + "} ");
-//        System.out.println("\t\t{" + String.format("%.2f", polygonBounds[1]) + ", " + String.format("%.2f", polygonBounds[3]) + "}");
-//        System.out.print("Polygon Lo \t{" + String.format("%.2f", polygonBounds[0]) + ", " + String.format("%.2f", polygonBounds[2]) + "} ");
-//        System.out.println("\t\t{" + String.format("%.2f", polygonBounds[1]) + ", " + String.format("%.2f", polygonBounds[2]) + "}");
-//        System.out.println("Projection Hi " + "\t" + projectionPoints[rowHi][colLo] + "\t" + projectionPoints[rowHi][colHi]);
-//        System.out.println("Projection Lo " + "\t" + projectionPoints[rowLo][colLo] + "\t" + projectionPoints[rowLo][colHi]);
-//        System.out.println();
         //Loop through points
         for (int i = rowLo; i <= rowHi; i++) {
             for (int j = colLo; j <= colHi; j++) {
-                boolean b = isInTriangle(polygon, projectionPoints[i][j]);
-                if (b) {
-                    Color color = polygon.getFaceColor();
-                    int[] colorArray = {color.getRed(), color.getGreen(), color.getBlue()};
-                    image.getRaster().setPixel(j, height-1-i, colorArray);
+                if (isInTriangle(polygon, projectionPoints[i][j])) {    // Check if point is in triangle
+                    Vector intersectionVector = translatedPolygon.lineIntersection(projectionPoints[i][j]);
+                    double z = intersectionVector.getLength();
+                    if (zBuffer[i][j] == 0 || z < zBuffer[i][j]) {     // Check against zBuffer
+                        zBuffer[i][j] = z;
+                        Color color = polygon.getFaceColor();
+                        int[] colorArray = {color.getRed(), color.getGreen(), color.getBlue()};
+                        image.getRaster().setPixel(j, height-1-i, colorArray);
+                    }
                 }
             }
         }
@@ -290,27 +206,10 @@ public class Camera {
     private void setProjectionPoints() {
         projectionPlane = new Plane(projectionPlanePosition, normalVector);
         Vector[] projectionVertices = new Vector[4];
-        /* 
-        1. Get the vectors whos direction from the observer, point at the corners of the projection rectangle
-        2. Give those vectors to the projection plane to get the set of vectors corresponding to the screens pixels
-        */ 
-//        Matrix xNegativeRotationMatrix = Matrix.get3DXRotationMatrix(-1*xFOV/2);
-//        Matrix xPositiveRotationMatrix = Matrix.get3DXRotationMatrix(xFOV/2);
-//        Matrix zNegativeRotationMatrix = Matrix.get3DZRotationMatrix(-1*yFOV/2);
-//        Matrix zPositiveRotationMatrix = Matrix.get3DZRotationMatrix(yFOV/2);
-//        Vector vertexDirection1 = originVector.add(normalVector.multiply(xNegativeRotationMatrix).multiply(zPositiveRotationMatrix));
-//        Vector vertexDirection2 = originVector.add(normalVector.multiply(xNegativeRotationMatrix).multiply(zNegativeRotationMatrix));
-//        Vector vertexDirection3 = originVector.add(normalVector.multiply(xPositiveRotationMatrix).multiply(zNegativeRotationMatrix));
-//        Vector vertexDirection4 = originVector.add(normalVector.multiply(xPositiveRotationMatrix).multiply(zPositiveRotationMatrix));
-//        projectionVertices[0] = projectionPlane.getIntersectingVector(originVector, vertexDirection1);
-//        projectionVertices[1] = projectionPlane.getIntersectingVector(originVector, vertexDirection2);
-//        projectionVertices[2] = projectionPlane.getIntersectingVector(originVector, vertexDirection3);
-//        projectionVertices[3] = projectionPlane.getIntersectingVector(originVector, vertexDirection4);
         projectionVertices[0] = new Vector(new double[]{1, 1, 1});        
         projectionVertices[1] = new Vector(new double[]{-1, -1, 1});
         projectionVertices[2] = new Vector(new double[]{1, -1, 1});
         projectionVertices[3] = new Vector(new double[]{-1, 1, 1});
-        
         projectionPoints = projectionPlane.getGridOfVectors(height, width, projectionVertices);
     }
     /**
@@ -322,33 +221,27 @@ public class Camera {
         double y = cameraPositionVector.getComponent(1);
         double z = cameraPositionVector.getComponent(2);
 
-        double xr = cameraRotationVector.getComponent(0)*translationScalar*0.01;
-        double yr = cameraRotationVector.getComponent(1)*translationScalar*0.01;
-        double zr = cameraRotationVector.getComponent(2)*translationScalar*0.01;
+        double xr = cameraRotationVector.getComponent(0)*translationScalar*0.1;
+        double yr = cameraRotationVector.getComponent(1)*translationScalar*0.1;
+        double zr = cameraRotationVector.getComponent(2)*translationScalar*0.1;
         switch(direction) {
             case FORWARD:
                 cameraPositionVector = new Vector(new double[]{x + -xr, y + yr, z + zr});
-                //cameraPositionVector = cameraPositionVector.add(cameraRotationVector.multiply(translationScalar));
                 break;
             case BACKWARD:
                 cameraPositionVector = new Vector(new double[]{x + xr, y + -yr, z + -zr});
-                //cameraPositionVector = cameraPositionVector.add(cameraRotationVector.multiply(-translationScalar));
                 break;
             case LEFT:
                 cameraPositionVector = new Vector(new double[]{x + -zr, y, z + -xr});
-                //Vector translationLeftVector = cameraRotationVector.cross(cameraPlaneNormalVector);
-                //cameraPositionVector = cameraPositionVector.add(translationLeftVector.multiply(translationScalar));
                 break;
             case RIGHT:
                 cameraPositionVector = new Vector(new double[]{x + zr, y, z + xr});
-                //Vector translationRightVector = cameraPlaneNormalVector.cross(cameraRotationVector);
-                //cameraPositionVector = cameraPositionVector.add(translationRightVector.multiply(translationScalar));
                 break;
             case UP:
-                cameraPositionVector = cameraPositionVector.add(cameraPlaneNormalVector.multiply(translationScalar*0.01));
+                cameraPositionVector = cameraPositionVector.add(cameraPlaneNormalVector.multiply(translationScalar*0.1));
                 break;
             case DOWN:
-                cameraPositionVector = cameraPositionVector.add(cameraPlaneNormalVector.multiply(-1*translationScalar*0.01));
+                cameraPositionVector = cameraPositionVector.add(cameraPlaneNormalVector.multiply(-1*translationScalar*0.1));
                 break;
         }
     }
@@ -404,12 +297,7 @@ public class Camera {
         cameraRotationVector = (((normalVector.multiply(pitchMatrix)).getUnitVector()).multiply(yawMatrix)).getUnitVector();
         cameraRotationVector.setComponent(-cameraRotationVector.getComponent(1), 1);
     }
-    
-    
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////    
+      
 ////////////////////////////////////////////////////////////////////////////////
     /**
      * Gives parameter states of this camera as an array of Strings, including: 
@@ -420,14 +308,8 @@ public class Camera {
         String[] data = {
                         "Camera Position: " + cameraPositionVector.copy(),
                         "Camera Direction: " + cameraRotationVector.copy(),
-//                        "Projection Position: " + (cameraPositionVector.add(cameraRotationVector)).copy(),
-//                        "Projection Direction: " + ((cameraPositionVector.add(cameraRotationVector)).subtract(cameraPositionVector)).copy(),
-//                        "Projection Length: " + ((cameraPositionVector.add(cameraRotationVector)).subtract(cameraPositionVector)).getLength(),
                         "Yaw: " + theta + "°",
                         "Pitch: " + phi + "°"
-//                        "Yaw Angle: " + yawAngle,
-//                        "Pitch Angle: " + pitchAngle,
-//                        "Roll Angle: " + rollAngle 
                 };
         return data;
     }
@@ -558,8 +440,5 @@ public class Camera {
             System.out.println();
         }
         System.out.println();
-    }
-    public BufferedImage getBufferedImage() {
-        return image;
     }
 }

@@ -17,10 +17,10 @@ public class TestWorldSpace extends WorldSpace{
 //        int zAxisLength = (zWidth*zSquares)/2 + 100;
         super.add(new Floor(xSquares, zSquares, xWidth, zWidth, startingX, startingZ));
 //        super.add(new Axes3D(xAxisLength, -1*xAxisLength, 500, -500, zAxisLength, -1*zAxisLength));
-        super.add(new Pyramid(150, 0, 150, 20));
-        super.add(new Pyramid(-150, 0, 150, 20));
-        super.add(new Pyramid(150, 0, -150, 20));
-        super.add(new Pyramid(-150, 0, -150, 20));
+        super.add(new Pyramid(150, 1, 150, 20));
+        super.add(new Pyramid(-150, 1, 150, 20));
+        super.add(new Pyramid(150, 1, -150, 20));
+        super.add(new Pyramid(-150, 1, -150, 20));
 //        super.add(new BigAssPolygon());
     }
 }
