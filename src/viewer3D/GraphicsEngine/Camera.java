@@ -141,7 +141,8 @@ public class Camera {
                 translatedVertices[j] = newPosition;
             }
             translatedPolygons[i] = new ProjectedPolygon(translatedVertices, polygons[i]);
-            double dotProduct = (translatedPolygons[i].getOriginalPolygon().getNormal()).dot(cameraRotationVector);
+            double dotProduct = (translatedPolygons[i].getOriginalPolygon().getNormal())
+                    .dot(translatedPolygons[i].getOriginalPolygon().getVertex(0).subtract(cameraPositionVector));
             if (dotProduct < 0) {
                 for (int j = 0; j < translatedVertices.length; j++) {
                     projectedVertices[j] = projectionPlane.getIntersectingVector(translatedVertices[j]);
