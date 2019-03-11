@@ -61,8 +61,8 @@ public class Floor implements Polyhedron {
         for (int i = 1; i < vertices.length; i++) {
             for (int j = 1; j < vertices[0].length; j++) {
                 polygons[polygonIndex] = new Polygon(new Vector[]{
+                        vertices[i][j-1],    
                         vertices[i-1][j-1],
-                        vertices[i][j-1],
                         vertices[i-1][j]});
                 polygons[polygonIndex].setShapeID(shapeName +"_"+ numID);
                 polygons[polygonIndex].setPolygonID("Square_p1: " + "x"+i + "," + "y"+j);

@@ -10,7 +10,7 @@ import viewer3D.Math.Vector;
 public class ProjectedPolygon extends Polygon {
     private Polygon originalPolygon;
 //    private Vector normal;
-//    private Plane plane;
+    private Plane plane;
     /**
      * Constructs this polygon with vertices and a reference to the original polygon
      * @param vectorArray The vertices of this polygon
@@ -47,10 +47,10 @@ public class ProjectedPolygon extends Polygon {
     public Polygon getOriginalPolygon() {
         return originalPolygon;
     }
-    @Override
-    public Vector getNormal() {
-        return originalPolygon.getNormal();
-    }
+//    @Override
+//    public Vector getNormal() {
+//        return super.getNormal();
+//    }
 //    public Vector getIntersectingVector(Vector directionVector) {
 //        return plane.getIntersectingVector(directionVector);
 //    }

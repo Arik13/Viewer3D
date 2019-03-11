@@ -42,7 +42,7 @@ public class CameraViewComponent extends JComponent {
         try {
             cursorSetter = new Robot();
         } catch (AWTException ex) {}
-        //cursorSetter.mouseMove(300, 300);
+        cursorSetter.mouseMove(300, 300);
         super.addMouseMotionListener(new CursorPositionListener());
     }
     
@@ -54,10 +54,8 @@ public class CameraViewComponent extends JComponent {
     public void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        if (image != null) {
-            g2.drawImage(image, 0, 0, null);
-        }
-        
+        g2.drawImage(image, 0, 0, null);
+
         // Draw Camera Data
         FontMetrics metrics = g2.getFontMetrics(this.getFont());
         g2.setColor(Color.WHITE);
@@ -66,9 +64,14 @@ public class CameraViewComponent extends JComponent {
             g2.drawString(data[i], 10, (i+1)*fontHeight + border.getThickness());
         }
     }
-
-    public void setImage(BufferedImage image) {
+    
+    /**
+     * Sets the image of this view
+     * @param image A BufferedImage
+     */
+    public void updateImage(BufferedImage image) {
         this.image = image;
+        repaint();
     }
     /**
      * Updates the data of the camera
@@ -127,10 +130,10 @@ public class CameraViewComponent extends JComponent {
             int deltaPhi = 0;
             
             if (e.getX() < getCenterX()) {
-                deltaTheta = xAngle;
+                deltaTheta = -xAngle;
                 wasUpdated = true;
             } else if (e.getX() > getCenterX())  {
-                deltaTheta = -xAngle;
+                deltaTheta = xAngle;
                 wasUpdated = true;
             }
             if (e.getY() < getCenterY()) {

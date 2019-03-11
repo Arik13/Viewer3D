@@ -14,9 +14,10 @@ import javax.swing.border.LineBorder;
 import viewer3D.GraphicsEngine.*;
 import viewer3D.GUI.*;
 import static viewer3D.GraphicsEngine.Direction.*;
+import viewer3D.Math.Vector;
 
 /**
- *
+ * 
  * @author Arik Dicks
  */
 public class Main {
@@ -27,15 +28,16 @@ public class Main {
      * @param args Not used
      */
     public static void main(String[] args) {
+//        Vector v1 = new Vector(new double[]{0, 0, 1});
+//        Vector v2 = new Vector(new double[]{1, 0, 0});
+//        System.out.println(v1.dot(v2));
         System.setProperty("sun.java2d.opengl", "true");
         
         // Make World
-        WorldSpace world = new TestWorldSpace();
+        WorldSpace world = new StreetWorldSpace();
         
         // Make Frame
         JFrame frame = new JFrame();
-        //System.out.println(frame.getGraphicsConfiguration().getDevice().getAvailableAcceleratedMemory());
-        
         
         // Get effective screen size
         Dimension screenSize = getScreenDimension(frame);
@@ -57,7 +59,7 @@ public class Main {
         
         // Make Camera View Component
         CameraViewComponent cameraViewComponent = new CameraViewComponent(camera);
-        cameraViewComponent.setImage(image);
+        cameraViewComponent.updateImage(image);
         cameraViewComponent.updateData(camera.getData());
         cameraViewComponent.setPreferredSize(new Dimension(width, height));
 
@@ -68,9 +70,13 @@ public class Main {
         cameraPanel.add(cameraViewComponent);
         cameraPanel.add(cameraControlPanel);
 
+        // Make Camera Data Panel
+        //CameraDataPanel cameraDataPanel = new CameraDataPanel(camera);
+        
         // Make Master Panel
         JPanel masterPanel = new JPanel();
         masterPanel.add(cameraPanel);
+        //masterPanel.add(cameraDataPanel);
         
         frame.add(masterPanel);
         frame.pack();
@@ -123,13 +129,14 @@ public class Main {
                 }
                 if (cameraMoved) {
                     image = camera.observe();
-                    cameraViewComponent.setImage(image);
-                    cameraViewComponent.repaint();
+                    cameraViewComponent.updateImage(image);
+                    //cameraDataPanel.update();
                     cameraControlPanel.update();   
                     totalFrames++;
                     totalTime += currentMilliSecond-lastMilliSecond + 1;
                     averageFrameRate = (totalFrames)/(totalTime/1000.0); 
                     currentFrameRate = (1000.0/(currentMilliSecond-lastMilliSecond));
+                    
                 }
             }
             if (currentTenthOfASecond > lastTenthOfASecond) {
@@ -139,8 +146,7 @@ public class Main {
                     "Average Framerate: " + String.format("%.2f", averageFrameRate), 
                     "Current Framerate: " + String.format("%.2f",currentFrameRate)
                 };
-                
-                String[] data = new String[cameraData.length + frameData.length];
+                String[] data = new String[cameraData.length + frameData.length ];
                 System.arraycopy(cameraData, 0, data, 0, cameraData.length);
                 System.arraycopy(frameData, 0, data, cameraData.length, frameData.length);
                 cameraViewComponent.updateData(data);

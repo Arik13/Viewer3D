@@ -133,6 +133,7 @@ public class Polygon {
         if (selected) {
             return selectionColor;
         }
+        //return genRandomColor();
         return this.faceColor;
     }
     /**
@@ -198,7 +199,8 @@ public class Polygon {
     }
     private Vector calcNormal() {
         Vector v = (vertices[1].subtract(vertices[0])).cross((vertices[2].subtract(vertices[0])));
-        return v.multiply(1/v.getLength());
+        return v.getUnitVector();
+        //return v.multiply(1/v.getLength());
     }
     public double[] getXYBounds() {
         double[] xyBounds = {
@@ -229,5 +231,12 @@ public class Polygon {
     }
     public Vector lineIntersection(Vector directionVector) {
         return plane.lineIntersection(directionVector);
+    }
+    private Color genRandomColor() {
+        return new Color(
+                (int)(Math.random()*255+1),
+                (int)(Math.random()*255+1),
+                (int)(Math.random()*255+1)
+        );
     }
 }

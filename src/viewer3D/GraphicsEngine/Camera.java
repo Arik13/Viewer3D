@@ -14,7 +14,7 @@ import viewer3D.Math.Vector;
  */
 public class Camera {
     private Plane projectionPlane;
-    private Polygon[] polygons;
+    private final Polygon[] polygons;
     private ProjectedPolygon[] projectedPolygons;
     private ProjectedPolygon[] translatedPolygons;
     private Vector[][] projectionPoints;
@@ -30,7 +30,7 @@ public class Camera {
     private Matrix rollMatrix;
     private Matrix pitchMatrix;
     private Matrix yawMatrix;
-    private int defaultRotationAngle;
+    private final int defaultRotationAngle;
     private int pitchAngle;
     private int yawAngle;
     private int rollAngle;
@@ -38,6 +38,7 @@ public class Camera {
     private int phi;
     private int width;
     private int height;
+    private final double EPSILON = Math.pow(10, -1);
     private double translationScalar;    
     private double xFOV;
     private double yFOV;
@@ -108,7 +109,6 @@ public class Camera {
         zBuffer = new double[height][width];
         
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        image.setAccelerationPriority(1);
     }
 
     /**
@@ -119,11 +119,11 @@ public class Camera {
     public BufferedImage observe() {
         projectPolygons();
         image = gc.createCompatibleImage(width, height);
+        image.setAccelerationPriority(1);
         zBuffer = new double[height][width];
         rasterizePolygons();
         return image;
     }
-    
     private void projectPolygons() {
         // Project polygons onto camera plane
         translatedPolygons = new ProjectedPolygon[polygons.length];
@@ -132,26 +132,34 @@ public class Camera {
             Vector[] vertices = {polygons[i].getVertex(0), polygons[i].getVertex(1), polygons[i].getVertex(2)};
             Vector[] translatedVertices = new Vector[vertices.length];
             Vector[] projectedVertices = new Vector[vertices.length];
-            for (int j = 0; j < projectedVertices.length; j++) {
+            for (int j = 0; j < translatedVertices.length; j++) {
                 // rotate and translate the point before getting its intersection
                 Vector fromCameraVector =  vertices[j].subtract(cameraPositionVector);
                 Vector newPosition = (fromCameraVector)
-                        .multiply(yawMatrix)
+                        .multiply(Matrix.get3DYRotationMatrix(Math.toRadians(-theta)))
                         .multiply(pitchMatrix);
                 translatedVertices[j] = newPosition;
-                projectedVertices[j] = projectionPlane.getIntersectingVector(newPosition);
             }
             translatedPolygons[i] = new ProjectedPolygon(translatedVertices, polygons[i]);
-            projectedPolygons[i] = new ProjectedPolygon(projectedVertices, polygons[i]);
+            double dotProduct = (translatedPolygons[i].getOriginalPolygon().getNormal()).dot(cameraRotationVector);
+            if (dotProduct < 0) {
+                for (int j = 0; j < translatedVertices.length; j++) {
+                    projectedVertices[j] = projectionPlane.getIntersectingVector(translatedVertices[j]);
+                }
+                projectedPolygons[i] = new ProjectedPolygon(projectedVertices, polygons[i]);
+            }
         }
     }
     private void rasterizePolygons() {
         for (int i = 0; i < translatedPolygons.length; i++) {
-            rasterizePolygon(projectedPolygons[i], translatedPolygons[i]);
+            if (projectedPolygons[i] != null) {
+                rasterizePolygon(projectedPolygons[i], translatedPolygons[i]);
+            }
         }
     }
     private void rasterizePolygon(ProjectedPolygon polygon, ProjectedPolygon translatedPolygon) {
-        polygonBounds = polygon.getXYBounds();        
+        // Convert polygon bounds to indices
+        polygonBounds = polygon.getXYBounds();
         int colLo = (int)(((polygonBounds[0]+1)/2)*height);
         int colHi = (int)(((polygonBounds[1]+1)/2)*height+1);
         int rowLo = (int)(((polygonBounds[2]+1)/2)*width);
@@ -168,18 +176,24 @@ public class Camera {
 
         colHi = (colHi < 0)? 0 : colHi;
         colHi = (colHi >= width)? width - 1 : colHi;
-
-        //Loop through points
         for (int i = rowLo; i <= rowHi; i++) {
             for (int j = colLo; j <= colHi; j++) {
-                if (isInTriangle(polygon, projectionPoints[i][j])) {    // Check if point is in triangle
+                
+                // Check if point is in triangle
+                if (isInTriangle(polygon, projectionPoints[i][j])) {
+
+                    // Check if point is not parallel
                     Vector intersectionVector = translatedPolygon.lineIntersection(projectionPoints[i][j]);
-                    double z = intersectionVector.getLength();
-                    if (zBuffer[i][j] == 0 || z < zBuffer[i][j]) {     // Check against zBuffer
-                        zBuffer[i][j] = z;
-                        Color color = polygon.getFaceColor();
-                        int[] colorArray = {color.getRed(), color.getGreen(), color.getBlue()};
-                        image.getRaster().setPixel(j, height-1-i, colorArray);
+                    if (intersectionVector != null) {
+                        
+                        // Check against zBuffer, and for proximity
+                        double z = intersectionVector.getLength();
+                        if (zBuffer[i][j] == 0 || z > EPSILON && z < zBuffer[i][j]) {  
+                            zBuffer[i][j] = z;
+                            Color color = polygon.getFaceColor();
+                            int[] colorArray = {color.getRed(), color.getGreen(), color.getBlue()};
+                            image.getRaster().setPixel(j, height-1-i, colorArray);
+                        }
                     }
                 }
             }
@@ -226,16 +240,16 @@ public class Camera {
         double zr = cameraRotationVector.getComponent(2)*translationScalar*0.1;
         switch(direction) {
             case FORWARD:
-                cameraPositionVector = new Vector(new double[]{x + -xr, y + yr, z + zr});
+                cameraPositionVector = new Vector(new double[]{x + xr, y + yr, z + zr});
                 break;
             case BACKWARD:
-                cameraPositionVector = new Vector(new double[]{x + xr, y + -yr, z + -zr});
+                cameraPositionVector = new Vector(new double[]{x + -xr, y + -yr, z + -zr});
                 break;
             case LEFT:
-                cameraPositionVector = new Vector(new double[]{x + -zr, y, z + -xr});
+                cameraPositionVector = new Vector(new double[]{x + -zr, y, z + xr});
                 break;
             case RIGHT:
-                cameraPositionVector = new Vector(new double[]{x + zr, y, z + xr});
+                cameraPositionVector = new Vector(new double[]{x + zr, y, z + -xr});
                 break;
             case UP:
                 cameraPositionVector = cameraPositionVector.add(cameraPlaneNormalVector.multiply(translationScalar*0.1));
@@ -306,8 +320,8 @@ public class Camera {
      */
     public String[] getData() {
         String[] data = {
-                        "Camera Position: " + cameraPositionVector.copy(),
-                        "Camera Direction: " + cameraRotationVector.copy(),
+                        "Camera Position: " + cameraPositionVector,
+                        "Camera Direction: " + cameraRotationVector,
                         "Yaw: " + theta + "°",
                         "Pitch: " + phi + "°"
                 };
@@ -380,9 +394,9 @@ public class Camera {
 
     /**
      * Sets the position of the camera to be at the given coordinates
-     * @param x The x position
-     * @param y The y position
-     * @param z The z position
+     * @param x The x position of the camera
+     * @param y The y position of the camera
+     * @param z The z position of the camera
      */
     public void setPosition(double x, double y, double z) {
         cameraPositionVector = new Vector(new double[]{x, y, z});
@@ -390,9 +404,9 @@ public class Camera {
 
     /**
      * Sets the direction of the camera to point along the vector described by the given coordinates
-     * @param x The x direction
-     * @param y The y direction
-     * @param z The z direction
+     * @param x The x direction of the camera
+     * @param y The y direction of the camera
+     * @param z The z direction of the camera
      */
     public void setDirection(double x, double y, double z) {
         cameraRotationVector = (new Vector(new double[]{x, y, z})).getUnitVector();
@@ -440,5 +454,8 @@ public class Camera {
             System.out.println();
         }
         System.out.println();
+    }
+    public BufferedImage getBufferedImage() {
+        return image;
     }
 }

@@ -1,0 +1,7 @@
+**OPTIMIZATIONS**
+    - Vector class mutability
+    - Frustum filtering
+    - Back-face culling
+    - BufferedImage reuse
+    - Triangle triple-edge pixel bounding
+    - 2D to 1D array

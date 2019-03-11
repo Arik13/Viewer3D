@@ -4,8 +4,8 @@ FULL GRAPHICS PIPELINE
     √ Generate pixel points on projection plane in a 2D array of vectors, one for every pixel
         ** Switch from recursive algorithm to incremental
     √ Map projection plane (and its polygons) to screen space
-    Create Raster corresponding to screen pixels
-    Access each screen space polygon
+    √ Create Raster corresponding to screen pixels
+    √ Access each screen space polygon
     Use triple edge bounding algorithm to get points bounded by polygon
     Ask polygon for min vertex distance
     For each point in each polygon

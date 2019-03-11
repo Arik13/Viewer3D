@@ -1,5 +1,4 @@
-Implement z-buffer and pixel algorithm
-    √ pixel algorithm
-    - z-Buffer
-
-
+Backface Culling
+ 
+Need the vector from the camera to the polygon
+Take the dot product of that and the polygon normal

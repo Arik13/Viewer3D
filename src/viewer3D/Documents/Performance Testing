@@ -1,0 +1,21 @@
+Projection
+Image Memory Allocation
+
+Rasterization
+
+Data
+- Memory footprint
+- Timestamp
+- Operation Elapsed Time
+- Sub-Operation Elapsed Time
+- Operation Average Elapsed Time
+- Sub-Operation Average Elapsed Time
+
+- Operation Name (projection, rasterization, etc.)
+- Sub-Operation # of loops (polygons projected, pixels rasterized etc.)
+
+Operation specific
+- Number of polygons processed
+- Number of pixels processed
+
+
