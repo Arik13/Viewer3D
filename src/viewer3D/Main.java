@@ -34,7 +34,9 @@ public class Main {
         System.setProperty("sun.java2d.opengl", "true");
         
         // Make World
-        WorldSpace world = new StreetWorldSpace();
+        //WorldSpace world = new StreetWorldSpace();
+        //WorldSpace world = new TestWorldSpace();
+        WorldSpace world = new BigAssPolygonSpace();
         
         // Make Frame
         JFrame frame = new JFrame();

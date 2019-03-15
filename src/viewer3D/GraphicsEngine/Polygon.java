@@ -190,12 +190,14 @@ public class Polygon {
     }
     @Override
     public String toString() {
-        return 
+        return  "" + vertices[0] +
+                vertices[1] +
+                vertices[2] +
                 "Shape ID: " + shapeID + 
-                "   Polygon ID: " + polygonID +
-                "   Selected: " + selected + 
-                "   Face Color: " + faceColor + 
-                "   Edge Color: " + edgeColor;
+                "Polygon ID: " + polygonID +
+                "Selected: " + selected + 
+                "Face Color: " + faceColor + 
+                "Edge Color: " + edgeColor;
     }
     private Vector calcNormal() {
         Vector v = (vertices[1].subtract(vertices[0])).cross((vertices[2].subtract(vertices[0])));
@@ -238,5 +240,13 @@ public class Polygon {
                 (int)(Math.random()*255+1),
                 (int)(Math.random()*255+1)
         );
+    }
+    public Vector getLoVertex() {
+        Vector v = (vertices[0].getComponent(1) < vertices[1].getComponent(1))? vertices[0] : vertices[1];
+        return (v.getComponent(1) < vertices[2].getComponent(1))? v : vertices[2];
+    }
+    public Vector getHiVertex() {
+        Vector v = (vertices[0].getComponent(1) > vertices[1].getComponent(1))? vertices[0] : vertices[1];
+        return (v.getComponent(1) > vertices[2].getComponent(1))? v : vertices[2];
     }
 }

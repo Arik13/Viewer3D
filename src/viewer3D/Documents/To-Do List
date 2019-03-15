@@ -1,4 +1,1 @@
-Backface Culling
- 
-Need the vector from the camera to the polygon
-Take the dot product of that and the polygon normal
+Triple-edge bounding algorithm

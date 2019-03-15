@@ -79,24 +79,13 @@ public class CameraViewComponent extends JComponent {
      */
     public void updateData(String[] data) {
         this.data = data;
-    }
-    public void drawImage(BufferedImage image) {
-        this.image = image;
-        repaint();
-    }
-        
+    } 
     public boolean wasUpdated() {
         if (wasUpdated) {
             wasUpdated = false;
             return true;
         }
         return false;
-    }
-    private int getAbsoluteCenterX() {
-        return super.getLocation().x + super.getWidth()/2;
-    }
-    private int getAbsoluteCenterY() {
-        return super.getLocation().y + super.getHeight()/2;
     }
     private int getCenterX() {
         return super.getWidth()/2;
@@ -113,13 +102,10 @@ public class CameraViewComponent extends JComponent {
     private class CursorPositionListener implements MouseMotionListener {
 
         @Override
-        public void mouseDragged(MouseEvent e) {
-
-        }
+        public void mouseDragged(MouseEvent e) {}
 
         @Override
         public void mouseMoved(MouseEvent e) {
-            
             int deltaX = Math.abs(e.getX()-getCenterX());
             int deltaY = Math.abs(e.getY()-getCenterY());
             double xRatio = deltaX/(double)getComponentWidth();
