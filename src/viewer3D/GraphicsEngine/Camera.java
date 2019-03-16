@@ -4,6 +4,9 @@ import java.awt.Color;
 import java.awt.GraphicsConfiguration;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import viewer3D.Math.Matrix;
 import viewer3D.Math.Plane;
 import viewer3D.Math.Vector;
@@ -47,6 +50,7 @@ public class Camera {
     private double[] polygonBounds;
     private BufferedImage image;
     private GraphicsConfiguration gc;
+    List<double[]> polygonVertices, clipper, clippedPolygonVertices;
     /**
      * Camera is constructed with a speed of 10 and an initial position of {0, 150, -450}
      * @param polygons
@@ -75,7 +79,7 @@ public class Camera {
         yawMatrix = Matrix.get3DYRotationMatrix(Math.toRadians(yawAngle));
          
         // Speed
-        translationScalar = 1;
+        translationScalar = 100;
 
         // Starting position
         int initialCameraPositionX = 0;
@@ -153,14 +157,191 @@ public class Camera {
         }
     }
     private void rasterizePolygons() {
+        //double[][] clipPoints = {{100, 100}, {300, 100}, {300, 300}, {100, 300}};
+        double[][] clipPoints = {{0, 0}, {width-1, 0}, {width-1, height-1}, {0, height-1}};
+        clipper = new ArrayList<>(Arrays.asList(clipPoints));
         for (int i = 0; i < translatedPolygons.length; i++) {
             if (projectedPolygons[i] != null) {
                 //rasterizePolygon(projectedPolygons[i], translatedPolygons[i]);
                 //rasterizePolygon(projectedPolygons[i], translatedPolygons[i], 0);
-                rasterizePolygon(projectedPolygons[i], translatedPolygons[i], 0, 0);
+                //rasterizePolygon(projectedPolygons[i], translatedPolygons[i], 0, 0);
+                rasterizePolygon(projectedPolygons[i], translatedPolygons[i], 0, 0, 0);
             }
         }
     }
+//------------------------------------------------------------------------------
+    private void rasterizePolygon(ProjectedPolygon polygon, ProjectedPolygon translatedPolygon, int d1, int d2, int d3) {
+        // Vertices converted from normalspace to screenspace
+        Vector[] vertices = polygon.getVertices();
+        double v1X_D = ((vertices[0].getComponent(0)+1)/2)*width;
+        double v1Y_D = ((vertices[0].getComponent(1)+1)/2)*height;
+        double v2X_D = ((vertices[1].getComponent(0)+1)/2)*width;
+        double v2Y_D = ((vertices[1].getComponent(1)+1)/2)*height;
+        double v3X_D = ((vertices[2].getComponent(0)+1)/2)*width;
+        double v3Y_D = ((vertices[2].getComponent(1)+1)/2)*height;
+        polygonVertices = new ArrayList<>(Arrays.asList(new double[][]{
+                    {v1X_D, v1Y_D},
+                    {v2X_D, v2Y_D},
+                    {v3X_D, v3Y_D}
+                }));
+        clippedPolygonVertices  = new ArrayList<>(polygonVertices);
+        clipPolygon();
+        
+        // Vertices quantized from screenspace to pixelspace
+        int v1X, v1Y, v2X, v2Y, v3X, v3Y;
+        v1X = (int)Math.round(v1X_D);
+        v1Y = (int)Math.round(v1Y_D);
+        v2X = (int)Math.round(v2X_D);
+        v2Y = (int)Math.round(v2Y_D);
+        v3X = (int)Math.round(v3X_D);
+        v3Y = (int)Math.round(v3Y_D);
+        
+        int rowHi = Math.max(Math.max(v1Y, v2Y), v3Y);
+        int rowLo = Math.min(Math.min(v1Y, v2Y), v3Y);
+        int colHi = Math.max(Math.max(v1X, v2X), v3X);
+        int colLo = Math.min(Math.min(v1X, v2X), v3X);
+        rowHi = (rowHi < 0)? 0 : rowHi;
+        rowHi = (rowHi >= height)? height - 1 : rowHi;
+        rowLo = (rowLo < 0)? 0 : rowLo;
+        rowLo = (rowLo >= height)? height - 1 : rowLo;
+        colHi = (colHi < 0)? 0 : colHi;
+        colHi = (colHi >= width)? width - 1 : colHi;
+        colLo = (colLo < 0)? 0 : colLo;
+        colLo = (colLo >= width)? width - 1 : colLo;
+        
+        
+        int[] leftBounds = new int[rowHi-rowLo+1];
+        int[] rightBounds = new int[rowHi-rowLo+1];
+        for (int i = 0; i < leftBounds.length; i++) {
+            leftBounds[i] = width;
+        }
+        for (int i = 0; i < clippedPolygonVertices.size(); i++) {
+            double[] p1 = clippedPolygonVertices.get(i);
+            double[] p2 = clippedPolygonVertices.get((i + 1) % clippedPolygonVertices.size());
+            getLinePoints(
+                (int)Math.round(p1[0])-colLo, (int)Math.round(p1[1])-rowLo,
+                (int)Math.round(p2[0])-colLo, (int)Math.round(p2[1])-rowLo,
+                leftBounds, rightBounds, colLo);
+        }
+        for (int i = rowLo; i < rowHi ; i++) {
+            for (int j = leftBounds[i-rowLo]; j < rightBounds[i-rowLo] ; j++) {   
+                // Check if point is not parallel
+                Vector intersectionVector = translatedPolygon.lineIntersection(projectionPoints[i][j]);
+                if (intersectionVector != null) {
+
+                    // Check against zBuffer, and for proximity
+                    double z = intersectionVector.getLength();
+                    if (zBuffer[i][j] == 0 || z < zBuffer[i][j]) {
+                        zBuffer[i][j] = z;
+                        Color color = polygon.getFaceColor();
+                        int[] colorArray = {color.getRed(), color.getGreen(), color.getBlue()};
+                        image.getRaster().setPixel(j, height-1-i, colorArray);
+                    }
+                }
+            }
+        }
+    }
+    private void clipPolygon() {
+        int numOfClipperVertices = clipper.size();
+        for (int i = 0; i < numOfClipperVertices; i++) {
+ 
+            int len2 = clippedPolygonVertices.size();
+            List<double[]> input = clippedPolygonVertices;
+            clippedPolygonVertices = new ArrayList<>(len2);
+ 
+            double[] A = clipper.get((i + numOfClipperVertices - 1) % numOfClipperVertices);
+            double[] B = clipper.get(i);
+ 
+            for (int j = 0; j < len2; j++) {
+ 
+                double[] P = input.get((j + len2 - 1) % len2);
+                double[] Q = input.get(j);
+ 
+                if (isInside(A, B, Q)) {
+                    if (!isInside(A, B, P))
+                        clippedPolygonVertices.add(intersection(A, B, P, Q));
+                    clippedPolygonVertices.add(Q);
+                } else if (isInside(A, B, P))
+                    clippedPolygonVertices.add(intersection(A, B, P, Q));
+            }
+        }
+    }
+ 
+    private boolean isInside(double[] a, double[] b, double[] c) {
+        return (a[0] - c[0]) * (b[1] - c[1]) > (a[1] - c[1]) * (b[0] - c[0]);
+    }
+ 
+    private double[] intersection(double[] a, double[] b, double[] p, double[] q) {
+        double A1 = b[1] - a[1];
+        double B1 = a[0] - b[0];
+        double C1 = A1 * a[0] + B1 * a[1];
+ 
+        double A2 = q[1] - p[1];
+        double B2 = p[0] - q[0];
+        double C2 = A2 * p[0] + B2 * p[1];
+ 
+        double det = A1 * B2 - A2 * B1;
+        double x = (B2 * C1 - B1 * C2) / det;
+        double y = (A1 * C2 - A2 * C1) / det;
+ 
+        return new double[]{x, y};
+    }
+    private void getLinePoints(int x1, int y1, int x2, int y2, int[] leftBounds, int[] rightBounds, int colLo) {
+        // delta of exact value and rounded value of the dependent variable
+        int d = 0;
+ 
+        int dx = Math.abs(x2 - x1);
+        int dy = Math.abs(y2 - y1);
+ 
+        int dx2 = 2 * dx; // slope scaling factors to
+        int dy2 = 2 * dy; // avoid floating point
+ 
+        int ix = x1 < x2 ? 1 : -1; // increment direction
+        int iy = y1 < y2 ? 1 : -1;
+ 
+        int x = x1;
+        int y = y1;
+ 
+        if (dx >= dy) {     // The slope is less than 1
+            int i = 0;
+            while (true) {
+                int xNew = x+colLo;
+                if (xNew < leftBounds[y]) {
+                    leftBounds[y] = xNew;
+                }
+                if (xNew > rightBounds[y]) {
+                    rightBounds[y] = xNew;
+                }
+                if (x == x2)        // The end of the line has been reached, exit
+                    break;
+                x += ix;            // increment x to the next pixel column
+                d += dy2;           
+                if (d > dx) {
+                    y += iy;
+                    d -= dx2;
+                }
+            }
+        } else {            // The slope is greater than 1
+            while (true) {
+                int xNew = x+colLo;
+                if (xNew < leftBounds[y]) {
+                    leftBounds[y] = xNew;
+                }
+                if (xNew > rightBounds[y]) {
+                    rightBounds[y] = xNew;
+                }
+                if (y == y2)        // The end of the line has been reached, exit
+                    break;
+                y += iy;            // increment y to the next pixel row
+                d += dx2;
+                if (d > dy) {
+                    x += ix;
+                    d -= dy2;
+                }
+            }
+        }
+    }
+//------------------------------------------------------------------------------
     private void rasterizePolygon(ProjectedPolygon polygon, ProjectedPolygon translatedPolygon, int dummy, int dummy2) {
         polygonBounds = polygon.getXYBounds();
         Vector[] vertices = polygon.getVertices();
@@ -275,7 +456,8 @@ public class Camera {
     private void restrictLine(double v1X, double v1Y, double v2X, double v2Y, Sector v1Sector, Sector v2Sector, int[] linePoints) {
         // y = (^y)/(^x)(x-x1) + y1
         // x = (^y)/(^x)(y-y1) + x1
-        
+        double deltaX = v2X-v1X;
+        double deltaY = v2Y-v1Y;
         if (v1Sector == Sector.CENTER_MIDDLE) {
             linePoints[0] = (int)Math.round(v1X);
             linePoints[1] = (int)Math.round(v1Y);
@@ -287,6 +469,8 @@ public class Camera {
                 v1Sector == Sector.BOT_LEFT_HI) {
                 linePoints[0] = 0;
                 linePoints[1] = (int)Math.round(((v2Y-v1Y)/(v2X-v1X)*(-v1X)+v1Y));
+                linePoints[1] = (linePoints[1] > height - 1)? height - 1 : linePoints[1]; 
+                linePoints[1] = (linePoints[1] < 0)? 0 : linePoints[1];
                 System.out.println("LEFT TRAPEZOID (" + v1Sector + "): " + v1X + " : " + v1Y + " --> " + linePoints[0] + " : " + linePoints[1]);
             } else if (    // Vertex is in the RIGHT trapezoid
                 v1Sector == Sector.TOP_RIGHT_LO ||
@@ -346,83 +530,17 @@ public class Camera {
                 System.out.println("BOT TRAPEZOID (" + v2Sector + "): " + v2X + " : " + v2Y + " --> " + linePoints[2] + " : " + linePoints[3]);
             }
         }
-    }
-    private int numOfVerticesInCenter(Sector sector1, Sector sector2) {
-        int numOfVerticesInCenter = 0;
-        if (sector1 == Sector.CENTER_MIDDLE)
-            numOfVerticesInCenter++;
-        if (sector2 == Sector.CENTER_MIDDLE)
-            numOfVerticesInCenter++;
-        return numOfVerticesInCenter;
-    }
-    private boolean verticesOccupySameSectorTrapezoid(Sector sector1, Sector sector2) {
-//        TOP_LEFT_LO, TOP_LEFT_HI, TOP_MIDDLE, TOP_RIGHT_LO, TOP_RIGHT_HI,
-//        CENTER_LEFT, CENTER_MIDDLE, CENTER_RIGHT,
-//        BOT_LEFT_LO, BOT_LEFT_HI, BOT_MIDDLE, BOT_RIGHT_LO, BOT_RIGHT_HI,
-//        ERROR
-
-        // Eliminate vertices that occupy the same trapezoid of sectors
-        // Y bounds covered by the screen rectangle intersections will be calculated
-        // by the other lines
-        if (    // Vertices are in the LEFT trapezoid
-                sector1 == Sector.TOP_LEFT_LO ||
-                sector1 == Sector.CENTER_LEFT ||
-                sector1 == Sector.BOT_LEFT_HI &&
-                sector2 == Sector.TOP_LEFT_LO ||
-                sector2 == Sector.CENTER_LEFT ||
-                sector2 == Sector.BOT_LEFT_HI
-                ) {
-            return false;
-        }
-        if (    // Vertices are in the RIGHT trapezoid
-                sector1 == Sector.TOP_RIGHT_LO ||
-                sector1 == Sector.CENTER_RIGHT ||
-                sector1 == Sector.BOT_RIGHT_HI &&
-                sector2 == Sector.TOP_RIGHT_LO ||
-                sector2 == Sector.CENTER_RIGHT ||
-                sector2 == Sector.BOT_RIGHT_HI
-                ) {
-            return false;
-        }
-        if (    // Vertices are in the TOP trapezoid
-                sector1 == Sector.TOP_LEFT_HI ||
-                sector1 == Sector.TOP_MIDDLE ||
-                sector1 == Sector.TOP_RIGHT_HI &&
-                sector2 == Sector.TOP_LEFT_HI ||
-                sector2 == Sector.TOP_MIDDLE ||
-                sector2 == Sector.TOP_RIGHT_HI
-                ) {
-            return false;
-        }
-        if (    // Vertices are in the BOTTOM trapezoid
-                sector1 == Sector.BOT_LEFT_HI ||
-                sector1 == Sector.BOT_MIDDLE ||
-                sector1 == Sector.BOT_RIGHT_HI &&
-                sector2 == Sector.BOT_LEFT_HI ||
-                sector2 == Sector.BOT_MIDDLE ||
-                sector2 == Sector.BOT_RIGHT_HI
-                ) {
-            return false;
-        }
-        return true;
-    }
-    private Row getRow(int v1Y) {
-        if (v1Y < 0) {
-            return Row.BOTTOM;
-        } else if (v1Y >= height) {
-            return Row.TOP;
-        } else {
-            return Row.CENTER;
-        }
-    }
-    private Column getColumn(int v1X) {
-        if (v1X < 0) {
-            return Column.LEFT;
-        } else if (v1X >= width) {
-            return Column.RIGHT;
-        } else {
-            return Column.MIDDLE;
-        }
+        linePoints[0] = (linePoints[0] > width - 1)? width - 1 : linePoints[0]; 
+        linePoints[0] = (linePoints[0] < 0)? 0 : linePoints[0];
+        
+        linePoints[1] = (linePoints[1] > height - 1)? height - 1 : linePoints[1]; 
+        linePoints[1] = (linePoints[1] < 0)? 0 : linePoints[1];
+        
+        linePoints[2] = (linePoints[2] > width - 1)? width - 1 : linePoints[2]; 
+        linePoints[2] = (linePoints[2] < 0)? 0 : linePoints[2];
+        
+        linePoints[3] = (linePoints[3] > height - 1)? height - 1 : linePoints[3]; 
+        linePoints[3] = (linePoints[3] < 0)? 0 : linePoints[3];
     }
     private Sector getSector(int v1X, int v1Y) { 
         Row row;
@@ -444,25 +562,24 @@ public class Camera {
         } else {
             row = Row.CENTER;
         }
-//        System.out.println(v1X + " : " + v1Y);
-//        System.out.println(row);
-//        System.out.println(col);
-//        System.out.println();
+        
+        double negF = (v1X-width)*(height)-(v1Y)*(width);
+        double posF = (v1X)*(height)-(v1Y)*(width);
         switch(row) {
             case TOP:
                 switch (col) {
                     case LEFT:     // top left
-                        if ((v1X-width)*(height)-(v1Y)*(-width) >= 0)
+                        if (negF >= 0)
                             return Sector.TOP_LEFT_HI;
                         else 
-                            return Sector.TOP_LEFT_LO;
+                            return Sector.TOP_LEFT_LO;          // TESTED
                     case MIDDLE:     // top middle
                         return Sector.TOP_MIDDLE;
                     case RIGHT:     // top right
-                        if ((v1X)*(height)-(v1Y)*(width) >= 0)
-                            return Sector.TOP_RIGHT_LO;
+                        if (posF >= 0)
+                            return Sector.TOP_RIGHT_LO;         // TESTED
                         else 
-                            return Sector.TOP_RIGHT_HI;
+                            return Sector.TOP_RIGHT_HI;         // TESTED
                 }
                 break;
             case CENTER:
@@ -478,81 +595,23 @@ public class Camera {
             case BOTTOM:
                 switch (col) {
                     case LEFT:     // bottom left
-                        if ((v1X)*(height)-(v1Y)*(width) >= 0)
+                        if (posF >= 0)
                             return Sector.BOT_RIGHT_HI;
                         else 
                             return Sector.BOT_RIGHT_LO;
                     case MIDDLE:     // bottom middle
                         return Sector.BOT_MIDDLE;
                     case RIGHT:     // bottom right
-                        if ((v1X-width)*(height)-(v1Y)*(-width) >= 0)
+                        if (negF < 0)       // Slope is greater than 0
                             return Sector.BOT_LEFT_HI;
                         else 
                             return Sector.BOT_LEFT_LO;
                 }
-            }
+        }
         return Sector.ERROR;
-        }
-    private boolean isVertexOnScreen(int v1X, int v1Y) {
-        return(v1X >= width || v1X < 0 || v1Y >= height || v1Y < 0);
     }
-    private void getLinePoints(int x1, int y1, int x2, int y2, int[] leftBounds, int[] rightBounds, int colLo) {
-        // delta of exact value and rounded value of the dependent variable
-        int d = 0;
- 
-        int dx = Math.abs(x2 - x1);
-        int dy = Math.abs(y2 - y1);
- 
-        int dx2 = 2 * dx; // slope scaling factors to
-        int dy2 = 2 * dy; // avoid floating point
- 
-        int ix = x1 < x2 ? 1 : -1; // increment direction
-        int iy = y1 < y2 ? 1 : -1;
- 
-        int x = x1;
-        int y = y1;
- 
-        if (dx >= dy) {     // The slope is less than 1
-            int i = 0;
-            while (true) {
-                //System.out.println(y + " : " + y2);
-                int xNew = x+colLo;
-                if (xNew < leftBounds[y]) {
-                    leftBounds[y] = xNew;
-                }
-                if (xNew > rightBounds[y]) {
-                    rightBounds[y] = xNew;
-                }
-                if (x == x2)        // The end of the line has been reached, exit
-                    break;
-                x += ix;            // increment x to the next pixel column
-                d += dy2;           
-                if (d > dx) {
-                    y += iy;
-                    d -= dx2;
-                }
-            }
-        } else {            // The slope is greater than 1
-            while (true) {
-                //System.out.println(y + " : " + y2);
-                int xNew = x+colLo;
-                if (xNew < leftBounds[y]) {
-                    leftBounds[y] = xNew;
-                }
-                if (xNew > rightBounds[y]) {
-                    rightBounds[y] = xNew;
-                }
-                if (y == y2)        // The end of the line has been reached, exit
-                    break;
-                y += iy;            // increment y to the next pixel row
-                d += dx2;
-                if (d > dy) {
-                    x += ix;
-                    d -= dy2;
-                }
-            }
-        }
-    }
+    
+//------------------------------------------------------------------------------
     private void rasterizePolygon(ProjectedPolygon polygon, ProjectedPolygon translatedPolygon, int dummy) {
         /*
         Algorithm:
@@ -677,6 +736,7 @@ public class Camera {
     private double getXAtY(double y1, double x1, double m, double y) {
         return ((y-y1)/m) + x1;
     }
+//------------------------------------------------------------------------------
     private void rasterizePolygon(ProjectedPolygon polygon, ProjectedPolygon translatedPolygon) {
         // Convert polygon bounds to indices
         polygonBounds = polygon.getXYBounds();

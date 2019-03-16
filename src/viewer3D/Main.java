@@ -35,8 +35,8 @@ public class Main {
         
         // Make World
         //WorldSpace world = new StreetWorldSpace();
-        //WorldSpace world = new TestWorldSpace();
-        WorldSpace world = new BigAssPolygonSpace();
+        WorldSpace world = new TestWorldSpace();
+        //WorldSpace world = new BigAssPolygonSpace();
         
         // Make Frame
         JFrame frame = new JFrame();
@@ -54,10 +54,10 @@ public class Main {
         image = camera.observe();
         
         // Make Camera Control Panel
-        int controlPanelHeight = 100;
-        CameraControlPanel cameraControlPanel = new CameraControlPanel(camera);
-        cameraControlPanel.setPreferredSize(new Dimension(width, controlPanelHeight));
-        cameraControlPanel.setBorder(BorderFactory.createCompoundBorder(new LineBorder(Color.BLACK, 2, false), new EmptyBorder(10, 10, 10, 10)));
+//        int controlPanelHeight = 100;
+//        CameraControlPanel cameraControlPanel = new CameraControlPanel(camera);
+//        cameraControlPanel.setPreferredSize(new Dimension(width, controlPanelHeight));
+//        cameraControlPanel.setBorder(BorderFactory.createCompoundBorder(new LineBorder(Color.BLACK, 2, false), new EmptyBorder(10, 10, 10, 10)));
         
         // Make Camera View Component
         CameraViewComponent cameraViewComponent = new CameraViewComponent(camera);
@@ -68,9 +68,9 @@ public class Main {
         // Make Camera Panel
         JPanel cameraPanel = new JPanel();
         cameraPanel.setLayout(new BoxLayout(cameraPanel, BoxLayout.Y_AXIS));
-        cameraPanel.setPreferredSize(new Dimension(width, height + controlPanelHeight));
+        cameraPanel.setPreferredSize(new Dimension(width, height));// + controlPanelHeight));
         cameraPanel.add(cameraViewComponent);
-        cameraPanel.add(cameraControlPanel);
+        //cameraPanel.add(cameraControlPanel);
 
         // Make Camera Data Panel
         //CameraDataPanel cameraDataPanel = new CameraDataPanel(camera);
@@ -126,14 +126,17 @@ public class Main {
                     camera.move(DOWN); 
                     cameraMoved = true;
                 }
-                if (cameraControlPanel.getWasCameraChanged() || cameraViewComponent.wasUpdated()) {
+                if (cameraViewComponent.wasUpdated()) {
                     cameraMoved = true;
                 }
+//                if (cameraControlPanel.getWasCameraChanged() || cameraViewComponent.wasUpdated()) {
+//                    cameraMoved = true;
+//                }
                 if (cameraMoved) {
                     image = camera.observe();
                     cameraViewComponent.updateImage(image);
                     //cameraDataPanel.update();
-                    cameraControlPanel.update();   
+                    //cameraControlPanel.update();   
                     totalFrames++;
                     totalTime += currentMilliSecond-lastMilliSecond + 1;
                     averageFrameRate = (totalFrames)/(totalTime/1000.0); 
